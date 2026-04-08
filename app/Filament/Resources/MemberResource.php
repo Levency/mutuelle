@@ -3,15 +3,14 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\MemberResource\Pages;
+use App\Filament\Resources\MemberResource\RelationManagers;
 use App\Models\Member;
-use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Infolists;
-use Filament\Infolists\Infolist;
+use Filament\Notifications\Notification;
 
 class MemberResource extends Resource
 {
@@ -26,50 +25,89 @@ class MemberResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Section::make('Informations Personnelles')
+
+            // ── Section 1 : Identification ──────────────────────────────────
+            Forms\Components\Section::make('Identification du Membre')
                 ->schema([
-                    Forms\Components\Select::make('user_id')
-                        ->label('Utilisateur')
-                        ->relationship('user', 'name')
-                        ->searchable()
-                        ->preload()
-                        ->required()
-                        ->createOptionForm([
-                            Forms\Components\TextInput::make('name')->required(),
-                            Forms\Components\TextInput::make('email')->email()->required(),
-                            Forms\Components\TextInput::make('password')->password()->required(),
-                        ]),
                     Forms\Components\TextInput::make('member_number')
-                        ->label('Numéro de Membre')
+                        ->label('N° Membre')
                         ->required()
                         ->unique(ignoreRecord: true)
-                        ->default(fn () => 'MBR-' . strtoupper(substr(uniqid(), -6))),
-                    Forms\Components\TextInput::make('profession')
-                        ->label('Profession'),
-                    Forms\Components\DatePicker::make('joined_at')
-                        ->label("Date d'adhésion")
-                        ->required()
-                        ->default(now()),
-                ])->columns(2),
+                        ->default(fn() => 'M-' . str_pad(Member::count() + 1, 4, '0', STR_PAD_LEFT))
+                        ->readOnly(),
 
-            Forms\Components\Section::make('Statut & Score')
-                ->schema([
                     Forms\Components\Select::make('status')
                         ->label('Statut')
                         ->options([
-                            'active' => 'Actif',
+                            'active'    => 'Actif',
                             'suspended' => 'Suspendu',
-                            'pending' => 'En attente',
+                            'inactive'  => 'Inactif',
                         ])
-                        ->required()
-                        ->default('active'),
+                        ->default('active')
+                        ->required(),
+
+                    Forms\Components\DatePicker::make('joined_at')
+                        ->label('Date d\'adhésion')
+                        ->default(now())
+                        ->required(),
+
                     Forms\Components\TextInput::make('confidence_score')
-                        ->label('Score de Confiance')
+                        ->label('Score de confiance')
                         ->numeric()
+                        ->default(100)
                         ->minValue(0)
                         ->maxValue(100)
-                        ->default(100)
-                        ->suffix('/100'),
+                        ->suffix('%'),
+                ])->columns(2),
+
+            // ── Section 2 : Compte utilisateur (optionnel) ──────────────────
+            Forms\Components\Section::make('Compte Utilisateur')
+                ->description('Optionnel — le membre peut ne pas avoir de compte de connexion')
+                ->collapsed()
+                ->schema([
+                    Forms\Components\Select::make('user_id')
+                        ->label('Lier à un compte utilisateur')
+                        ->relationship('user', 'name')
+                        ->searchable()
+                        ->preload()
+                        ->nullable()
+                        ->placeholder('Aucun compte (saisir les infos ci-dessous)'),
+                ]),
+
+            // ── Section 3 : Informations personnelles directes ───────────────
+            Forms\Components\Section::make('Informations Personnelles')
+                ->description('À remplir si le membre n\'a pas de compte utilisateur')
+                ->schema([
+                    Forms\Components\TextInput::make('first_name')
+                        ->label('Prénom')
+                        ->required(fn(Forms\Get $get) => !$get('user_id')),
+                    Forms\Components\TextInput::make('last_name')
+                        ->label('Nom de famille')
+                        ->required(fn(Forms\Get $get) => !$get('user_id')),
+                    Forms\Components\TextInput::make('phone')
+                        ->label('Téléphone')
+                        ->tel(),
+                    Forms\Components\TextInput::make('national_id')
+                        ->label('N° d\'identité nationale (CIN)'),
+                    Forms\Components\DatePicker::make('birth_date')
+                        ->label('Date de naissance'),
+                    Forms\Components\TextInput::make('profession')
+                        ->label('Profession'),
+                    Forms\Components\Textarea::make('address')
+                        ->label('Adresse complète')
+                        ->rows(2)
+                        ->columnSpanFull(),
+                ])->columns(2),
+
+            // ── Section 4 : Contact d'urgence ────────────────────────────────
+            Forms\Components\Section::make('Contact d\'Urgence')
+                ->collapsed()
+                ->schema([
+                    Forms\Components\TextInput::make('emergency_contact')
+                        ->label('Nom du contact d\'urgence'),
+                    Forms\Components\TextInput::make('emergency_phone')
+                        ->label('Téléphone d\'urgence')
+                        ->tel(),
                 ])->columns(2),
         ]);
     }
@@ -82,52 +120,57 @@ class MemberResource extends Resource
                     ->label('N° Membre')
                     ->searchable()
                     ->sortable()
-                    ->copyable(),
-                Tables\Columns\TextColumn::make('user.name')
-                    ->label('Nom')
-                    ->searchable()
+                    ->copyable()
+                    ->weight('bold'),
+
+                Tables\Columns\TextColumn::make('full_name')
+                    ->label('Nom complet')
+                    ->searchable(['first_name', 'last_name', 'user.name'])
                     ->sortable(),
-                Tables\Columns\TextColumn::make('user.email')
-                    ->label('Email')
-                    ->searchable()
-                    ->toggleable(),
-                Tables\Columns\TextColumn::make('profession')
-                    ->label('Profession')
-                    ->toggleable(),
-                Tables\Columns\BadgeColumn::make('status')
-                    ->label('Statut')
-                    ->colors([
-                        'success' => 'active',
-                        'danger' => 'suspended',
-                        'warning' => 'pending',
-                    ])
-                    ->formatStateUsing(fn($state) => match($state) {
-                        'active' => 'Actif',
-                        'suspended' => 'Suspendu',
-                        'pending' => 'En attente',
-                        default => $state,
-                    }),
+
+                Tables\Columns\TextColumn::make('phone')
+                    ->label('Téléphone')
+                    ->searchable(),
+
+                Tables\Columns\TextColumn::make('total_contributed')
+                    ->label('Total cotisé')
+                    ->money('USD')
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('confidence_score')
                     ->label('Score')
-                    ->suffix('/100')
+                    ->suffix('%')
                     ->sortable()
-                    ->color(fn($state) => $state >= 75 ? 'success' : ($state >= 50 ? 'warning' : 'danger')),
-                Tables\Columns\TextColumn::make('contributions_count')
-                    ->label('Cotisations')
-                    ->counts('contributions'),
+                    ->color(fn($state) => match(true) {
+                        $state >= 80 => 'success',
+                        $state >= 60 => 'warning',
+                        default      => 'danger',
+                    }),
+
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Statut')
+                    ->badge()
+                    ->color(fn($state) => match($state) {
+                        'active'    => 'success',
+                        'suspended' => 'danger',
+                        default     => 'gray',
+                    })
+                    ->formatStateUsing(fn($state) => match($state) {
+                        'active'    => 'Actif',
+                        'suspended' => 'Suspendu',
+                        'inactive'  => 'Inactif',
+                        default     => $state,
+                    }),
+
                 Tables\Columns\TextColumn::make('joined_at')
-                    ->label("Adhésion")
+                    ->label('Adhésion')
                     ->date('d/m/Y')
                     ->sortable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Statut')
-                    ->options([
-                        'active' => 'Actif',
-                        'suspended' => 'Suspendu',
-                        'pending' => 'En attente',
-                    ]),
+                    ->options(['active' => 'Actif', 'suspended' => 'Suspendu', 'inactive' => 'Inactif']),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
@@ -138,70 +181,55 @@ class MemberResource extends Resource
                     ->color('danger')
                     ->requiresConfirmation()
                     ->visible(fn($record) => $record->status === 'active')
-                    ->action(fn($record) => $record->update(['status' => 'suspended'])),
-                Tables\Actions\Action::make('activate')
-                    ->label('Activer')
+                    ->action(function ($record) {
+                        $record->update(['status' => 'suspended']);
+                        Notification::make()->title('Membre suspendu')->danger()->send();
+                    }),
+                Tables\Actions\Action::make('reactivate')
+                    ->label('Réactiver')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
-                    ->visible(fn($record) => $record->status !== 'active')
-                    ->action(fn($record) => $record->update(['status' => 'active'])),
+                    ->requiresConfirmation()
+                    ->visible(fn($record) => $record->status === 'suspended')
+                    ->action(function ($record) {
+                        $record->update(['status' => 'active', 'confidence_score' => 100]);
+                        Notification::make()->title('Membre réactivé')->success()->send();
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->defaultSort('created_at', 'desc');
+            ->defaultSort('joined_at', 'desc');
     }
 
-    public static function infolist(Infolist $infolist): Infolist
-    {
-        return $infolist->schema([
-            Infolists\Components\Section::make('Profil du Membre')
-                ->schema([
-                    Infolists\Components\TextEntry::make('member_number')->label('N° Membre'),
-                    Infolists\Components\TextEntry::make('user.name')->label('Nom'),
-                    Infolists\Components\TextEntry::make('user.email')->label('Email'),
-                    Infolists\Components\TextEntry::make('profession')->label('Profession'),
-                    Infolists\Components\TextEntry::make('status')
-                        ->label('Statut')
-                        ->badge()
-                        ->color(fn($state) => match($state) {
-                            'active' => 'success',
-                            'suspended' => 'danger',
-                            default => 'warning',
-                        }),
-                    Infolists\Components\TextEntry::make('confidence_score')->label('Score de confiance')->suffix('/100'),
-                    Infolists\Components\TextEntry::make('joined_at')->label("Date d'adhésion")->date('d/m/Y'),
-                ])->columns(2),
-        ]);
-    }
-
-    public static function getRelations(): array
+    public static function getRelationManagers(): array
     {
         return [
-            MemberResource\RelationManagers\ContributionsRelationManager::class,
-            MemberResource\RelationManagers\LoansRelationManager::class,
+            RelationManagers\ContributionsRelationManager::class,
+            RelationManagers\LoansRelationManager::class,
         ];
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListMembers::route('/'),
+            'index'  => Pages\ListMembers::route('/'),
             'create' => Pages\CreateMember::route('/create'),
-            'view' => Pages\ViewMember::route('/{record}'),
-            'edit' => Pages\EditMember::route('/{record}/edit'),
+            'view'   => Pages\ViewMember::route('/{record}'),
+            'edit'   => Pages\EditMember::route('/{record}/edit'),
         ];
     }
 
     public static function getNavigationBadge(): ?string
     {
-        return static::getModel()::where('status', 'active')->count();
+        $suspended = Member::where('status', 'suspended')->count();
+        return $suspended > 0 ? (string) $suspended : null;
     }
 
     public static function getNavigationBadgeColor(): ?string
     {
-        return 'success';
+        return 'danger';
     }
 }

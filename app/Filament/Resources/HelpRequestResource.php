@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\HelpRequestResource\Pages;
 use App\Models\HelpRequest;
 use App\Models\Fund;
+use App\Services\FundService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -12,6 +13,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Infolists;
 use Filament\Infolists\Infolist;
+use Filament\Notifications\Notification;
 
 class HelpRequestResource extends Resource
 {
@@ -31,7 +33,7 @@ class HelpRequestResource extends Resource
                     Forms\Components\Select::make('member_id')
                         ->label('Membre')
                         ->relationship('member', 'member_number')
-                        ->getOptionLabelFromRecordUsing(fn($record) => "{$record->member_number} — {$record->user->name}")
+                        ->getOptionLabelFromRecordUsing(fn($record) => "{$record->member_number} — {$record->full_name}")
                         ->searchable()
                         ->preload()
                         ->required(),
@@ -39,10 +41,11 @@ class HelpRequestResource extends Resource
                         ->label('Motif de la demande')
                         ->required(),
                     Forms\Components\TextInput::make('amount_requested')
-                        ->label('Montant demandé (HTG)')
+                        ->label('Montant demandé ($)')
                         ->numeric()
                         ->required()
-                        ->minValue(1),
+                        ->minValue(1)
+                        ->helperText(fn() => '💰 Fonds disponible : ' . number_format(app(FundService::class)->getAvailableBalance(), 2) . ' $'),
                     Forms\Components\Select::make('status')
                         ->label('Statut')
                         ->options([
@@ -70,17 +73,19 @@ class HelpRequestResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('member.user.name')->label('Membre')->searchable()->sortable(),
+                Tables\Columns\TextColumn::make('member.full_name')->label('Membre')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('reason')->label('Motif')->limit(40),
-                Tables\Columns\TextColumn::make('amount_requested')->label('Montant demandé')->money('HTG'),
-                Tables\Columns\BadgeColumn::make('status')
+                Tables\Columns\TextColumn::make('amount_requested')->label('Montant demandé')->money('USD'),
+                Tables\Columns\TextColumn::make('status')
                     ->label('Statut')
-                    ->colors([
-                        'warning' => 'pending',
-                        'success' => 'validated',
-                        'danger' => 'rejected',
-                        'info' => 'paid',
-                    ])
+                    ->badge()
+                    ->color(fn($state) => match($state) {
+                        'pending' => 'warning',
+                        'validated' => 'success',
+                        'rejected' => 'danger',
+                        'paid' => 'info',
+                        default => 'gray',
+                    })
                     ->formatStateUsing(fn($state) => match($state) {
                         'pending' => 'En attente',
                         'validated' => 'Validée',
@@ -108,7 +113,21 @@ class HelpRequestResource extends Resource
                     ->color('success')
                     ->requiresConfirmation()
                     ->visible(fn($record) => $record->status === 'pending')
-                    ->action(fn($record) => $record->update(['status' => 'validated'])),
+                    ->action(function ($record) {
+                        $service = app(FundService::class);
+
+                        if (!$service->canApprove($record->amount_requested, 'help')) {
+                            Notification::make()
+                                ->title('Fonds insuffisants')
+                                ->body($service->getInsufficientFundsMessage($record->amount_requested, 'help'))
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+
+                        $record->update(['status' => 'validated']);
+                        Notification::make()->title('Demande validée')->success()->send();
+                    }),
                 Tables\Actions\Action::make('pay')
                     ->label('Marquer Payée')
                     ->icon('heroicon-o-banknotes')
@@ -117,13 +136,16 @@ class HelpRequestResource extends Resource
                     ->visible(fn($record) => $record->status === 'validated')
                     ->action(function ($record) {
                         $record->update(['status' => 'paid']);
-                        Fund::create([
-                            'type' => 'outflow',
-                            'amount' => $record->amount_requested,
-                            'description' => "Aide accordée à {$record->member->user->name} — {$record->reason}",
-                            'reference_type' => HelpRequest::class,
-                            'reference_id' => $record->id,
-                        ]);
+
+                        // Enregistrer la sortie dans le journal de caisse
+                        app(FundService::class)->logMovement(
+                            'outflow',
+                            $record->amount_requested,
+                            "Aide accordée à {$record->member->full_name} — {$record->reason}",
+                            $record
+                        );
+
+                        Notification::make()->title('Aide payée et enregistrée en caisse')->success()->send();
                     }),
                 Tables\Actions\Action::make('reject')
                     ->label('Rejeter')
@@ -131,7 +153,10 @@ class HelpRequestResource extends Resource
                     ->color('danger')
                     ->requiresConfirmation()
                     ->visible(fn($record) => $record->status === 'pending')
-                    ->action(fn($record) => $record->update(['status' => 'rejected'])),
+                    ->action(function ($record) {
+                        $record->update(['status' => 'rejected']);
+                        Notification::make()->title('Demande rejetée')->danger()->send();
+                    }),
             ])
             ->defaultSort('created_at', 'desc');
     }
@@ -141,9 +166,9 @@ class HelpRequestResource extends Resource
         return $infolist->schema([
             Infolists\Components\Section::make("Demande d'Aide")
                 ->schema([
-                    Infolists\Components\TextEntry::make('member.user.name')->label('Membre'),
+                    Infolists\Components\TextEntry::make('member.full_name')->label('Membre'),
                     Infolists\Components\TextEntry::make('reason')->label('Motif'),
-                    Infolists\Components\TextEntry::make('amount_requested')->label('Montant')->money('HTG'),
+                    Infolists\Components\TextEntry::make('amount_requested')->label('Montant')->money('USD'),
                     Infolists\Components\TextEntry::make('status')->label('Statut')->badge(),
                     Infolists\Components\TextEntry::make('description')->label('Description'),
                 ])->columns(2),

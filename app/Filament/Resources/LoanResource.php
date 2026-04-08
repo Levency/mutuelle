@@ -5,15 +5,17 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\LoanResource\Pages;
 use App\Models\Loan;
 use App\Models\Setting;
+use App\Services\FundService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Filament\Infolists;
-use Filament\Infolists\Infolist;
 
 class LoanResource extends Resource
 {
@@ -28,78 +30,92 @@ class LoanResource extends Resource
     public static function form(Form $form): Form
     {
         return $form->schema([
+
             Forms\Components\Section::make('Demande de Prêt')
                 ->schema([
                     Forms\Components\Select::make('member_id')
                         ->label('Membre')
                         ->relationship('member', 'member_number')
-                        ->getOptionLabelFromRecordUsing(fn($record) => "{$record->member_number} — {$record->user->name}")
+                        ->getOptionLabelFromRecordUsing(fn($record) => "{$record->member_number} — {$record->full_name}")
                         ->searchable()
                         ->preload()
-                        ->required(),
+                        ->required()
+                        ->helperText(fn() => '💰 Fonds disponible : ' . number_format(app(FundService::class)->getAvailableBalance(), 2) . ' $'),
+
                     Forms\Components\Select::make('status')
                         ->label('Statut')
                         ->options([
-                            'pending' => 'En attente',
-                            'active' => 'En cours',
-                            'repaid' => 'Remboursé',
+                            'pending'   => 'En attente',
+                            'active'    => 'En cours',
+                            'repaid'    => 'Remboursé',
                             'defaulted' => 'En défaut',
-                            'rejected' => 'Rejeté',
+                            'rejected'  => 'Rejeté',
                         ])
                         ->default('pending')
                         ->required(),
                 ])->columns(2),
 
             Forms\Components\Section::make('Calculateur de Prêt')
-                ->description('Remplissez les champs pour calculer automatiquement le montant total.')
+                ->description('Le montant total et la mensualité sont calculés automatiquement en intérêt simple.')
                 ->schema([
                     Forms\Components\TextInput::make('principal_amount')
-                        ->label('Capital demandé (HTG)')
+                        ->label('Capital demandé ($)')
                         ->numeric()
                         ->required()
                         ->minValue(1)
                         ->live(debounce: 500)
-                        ->afterStateUpdated(function (Get $get, Set $set) {
-                            self::recalculate($get, $set);
-                        }),
+                        ->afterStateUpdated(fn(Get $get, Set $set) => self::recalculate($get, $set)),
+
                     Forms\Components\TextInput::make('interest_rate')
                         ->label('Taux d\'intérêt (%)')
                         ->numeric()
                         ->default(fn() => Setting::get('default_loan_interest_rate', 10))
                         ->minValue(0)
                         ->live(debounce: 500)
-                        ->afterStateUpdated(function (Get $get, Set $set) {
-                            self::recalculate($get, $set);
-                        }),
+                        ->afterStateUpdated(fn(Get $get, Set $set) => self::recalculate($get, $set)),
+
                     Forms\Components\TextInput::make('term_months')
                         ->label('Durée (mois)')
                         ->numeric()
                         ->default(12)
                         ->minValue(1)
                         ->live(debounce: 500)
-                        ->afterStateUpdated(function (Get $get, Set $set) {
-                            self::recalculate($get, $set);
+                        ->afterStateUpdated(fn(Get $get, Set $set) => self::recalculate($get, $set)),
+
+                    Forms\Components\Placeholder::make('fund_check')
+                        ->label('✅ Vérification des Fonds')
+                        ->content(function (Get $get): string {
+                            $amount    = floatval($get('principal_amount') ?? 0);
+                            $service   = app(FundService::class);
+                            $available = $service->getAvailableBalance();
+                            if ($amount <= 0) return "Saisissez un montant pour vérifier.";
+                            if ($service->canApprove($amount, 'loan')) {
+                                return "✅ Fonds suffisants — Disponible : " . number_format($available, 2) . " $";
+                            }
+                            return "❌ " . $service->getInsufficientFundsMessage($amount, 'loan');
                         }),
+
                     Forms\Components\Placeholder::make('total_display')
-                        ->label('💰 Total à rembourser (HTG)')
+                        ->label('💰 Total à rembourser ($)')
                         ->content(function (Get $get): string {
                             $principal = floatval($get('principal_amount') ?? 0);
-                            $rate = floatval($get('interest_rate') ?? 0);
-                            $months = intval($get('term_months') ?? 0);
-                            $total = $principal + ($principal * ($rate / 100) * ($months / 12));
-                            return number_format($total, 2) . ' HTG';
+                            $rate      = floatval($get('interest_rate') ?? 0);
+                            $months    = intval($get('term_months') ?? 0);
+                            $total     = $principal + ($principal * ($rate / 100) * ($months / 12));
+                            return number_format($total, 2) . ' $';
                         }),
+
                     Forms\Components\Placeholder::make('monthly_payment')
-                        ->label('📅 Mensualité estimée (HTG)')
+                        ->label('📅 Mensualité estimée ($)')
                         ->content(function (Get $get): string {
                             $principal = floatval($get('principal_amount') ?? 0);
-                            $rate = floatval($get('interest_rate') ?? 0);
-                            $months = intval($get('term_months') ?? 1);
+                            $rate      = floatval($get('interest_rate') ?? 0);
+                            $months    = intval($get('term_months') ?? 1);
                             if ($months <= 0) return '–';
                             $total = $principal + ($principal * ($rate / 100) * ($months / 12));
-                            return number_format($total / $months, 2) . ' HTG / mois';
+                            return number_format($total / $months, 2) . ' $ / mois';
                         }),
-                ])->columns(2),
+                ])->columns(3),
 
             Forms\Components\Section::make('Dates')
                 ->schema([
@@ -107,7 +123,6 @@ class LoanResource extends Resource
                     Forms\Components\DatePicker::make('due_date')->label('Date d\'échéance finale'),
                 ])->columns(2),
 
-            // Hidden computed fields
             Forms\Components\Hidden::make('total_to_repay'),
             Forms\Components\Hidden::make('balance_remaining'),
         ]);
@@ -116,9 +131,9 @@ class LoanResource extends Resource
     protected static function recalculate(Get $get, Set $set): void
     {
         $principal = floatval($get('principal_amount') ?? 0);
-        $rate = floatval($get('interest_rate') ?? 0);
-        $months = intval($get('term_months') ?? 0);
-        $total = $principal + ($principal * ($rate / 100) * ($months / 12));
+        $rate      = floatval($get('interest_rate') ?? 0);
+        $months    = intval($get('term_months') ?? 0);
+        $total     = $principal + ($principal * ($rate / 100) * ($months / 12));
         $set('total_to_repay', round($total, 2));
         $set('balance_remaining', round($total, 2));
     }
@@ -128,63 +143,145 @@ class LoanResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('id')->label('#')->sortable(),
-                Tables\Columns\TextColumn::make('member.user.name')->label('Membre')->searchable()->sortable(),
-                Tables\Columns\TextColumn::make('principal_amount')->label('Capital')->money('HTG'),
+                Tables\Columns\TextColumn::make('member.full_name')
+                    ->label('Membre')
+                    ->searchable()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('principal_amount')->label('Capital')->money('USD'),
                 Tables\Columns\TextColumn::make('interest_rate')->label('Taux')->suffix('%'),
                 Tables\Columns\TextColumn::make('term_months')->label('Durée')->suffix(' mois'),
-                Tables\Columns\TextColumn::make('total_to_repay')->label('Total')->money('HTG'),
-                Tables\Columns\TextColumn::make('balance_remaining')->label('Restant')->money('HTG'),
-                Tables\Columns\BadgeColumn::make('status')
-                    ->label('Statut')
-                    ->colors([
-                        'warning' => 'pending',
-                        'success' => 'active',
-                        'gray' => 'repaid',
-                        'danger' => 'defaulted',
-                        'info' => 'rejected',
-                    ])
-                    ->formatStateUsing(fn($state) => match($state) {
-                        'pending' => 'En attente',
-                        'active' => 'En cours',
-                        'repaid' => 'Remboursé',
-                        'defaulted' => 'En défaut',
-                        'rejected' => 'Rejeté',
-                        default => $state,
-                    }),
-                // Progress bar for repayment
+                Tables\Columns\TextColumn::make('total_to_repay')->label('Total')->money('USD'),
+                Tables\Columns\TextColumn::make('balance_remaining')->label('Restant')->money('USD')
+                    ->color(fn($state) => $state > 0 ? 'danger' : 'success'),
                 Tables\Columns\TextColumn::make('repayment_progress')
                     ->label('Progression')
                     ->getStateUsing(function ($record) {
                         if ($record->total_to_repay <= 0) return '—';
                         $paid = $record->total_to_repay - $record->balance_remaining;
-                        $pct = round(($paid / $record->total_to_repay) * 100);
+                        $pct  = round(($paid / $record->total_to_repay) * 100);
                         return "{$pct}%";
+                    }),
+                Tables\Columns\TextColumn::make('status')
+                    ->label('Statut')
+                    ->badge()
+                    ->color(fn($state) => match($state) {
+                        'pending'   => 'warning',
+                        'active'    => 'success',
+                        'repaid'    => 'gray',
+                        'defaulted' => 'danger',
+                        'rejected'  => 'info',
+                        default     => 'gray',
+                    })
+                    ->formatStateUsing(fn($state) => match($state) {
+                        'pending'   => 'En attente',
+                        'active'    => 'En cours',
+                        'repaid'    => 'Remboursé',
+                        'defaulted' => 'En défaut',
+                        'rejected'  => 'Rejeté',
+                        default     => $state,
                     }),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
-                        'pending' => 'En attente', 'active' => 'En cours',
-                        'repaid' => 'Remboursé', 'defaulted' => 'En défaut',
+                        'pending'   => 'En attente',
+                        'active'    => 'En cours',
+                        'repaid'    => 'Remboursé',
+                        'defaulted' => 'En défaut',
                     ]),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+
                 Tables\Actions\Action::make('approve')
                     ->label('Approuver')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->requiresConfirmation()
                     ->visible(fn($record) => $record->status === 'pending')
-                    ->action(fn($record) => $record->update(['status' => 'active', 'disbursement_date' => now()])),
+                    ->action(function ($record) {
+                        $service = app(FundService::class);
+
+                        if (!$service->canApprove($record->principal_amount, 'loan')) {
+                            Notification::make()
+                                ->title('Fonds insuffisants')
+                                ->body($service->getInsufficientFundsMessage($record->principal_amount, 'loan'))
+                                ->danger()
+                                ->send();
+                            return;
+                        }
+
+                        $record->update(['status' => 'active', 'disbursement_date' => now()]);
+
+                        // Enregistrer la sortie dans le journal de caisse
+                        $service->logMovement(
+                            'outflow',
+                            $record->principal_amount,
+                            "Décaissement prêt #{$record->id} — {$record->member->full_name}",
+                            $record
+                        );
+
+                        Notification::make()->title('Prêt approuvé et décaissé')->success()->send();
+                    }),
+
                 Tables\Actions\Action::make('reject')
                     ->label('Rejeter')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
                     ->requiresConfirmation()
                     ->visible(fn($record) => $record->status === 'pending')
-                    ->action(fn($record) => $record->update(['status' => 'rejected'])),
+                    ->action(function ($record) {
+                        $record->update(['status' => 'rejected']);
+                        Notification::make()->title('Prêt rejeté')->danger()->send();
+                    }),
+
+                Tables\Actions\Action::make('add_repayment')
+                    ->label('Rembourser')
+                    ->icon('heroicon-o-banknotes')
+                    ->color('info')
+                    ->visible(fn($record) => $record->status === 'active')
+                    ->form([
+                        Forms\Components\Placeholder::make('info')
+                            ->label('Solde restant')
+                            ->content(fn($record) => number_format($record->balance_remaining, 2) . ' $'),
+                        Forms\Components\TextInput::make('amount_paid')
+                            ->label('Montant remboursé ($)')
+                            ->numeric()
+                            ->required()
+                            ->minValue(1),
+                        Forms\Components\DatePicker::make('payment_date')
+                            ->label('Date du paiement')
+                            ->default(now())
+                            ->required(),
+                        Forms\Components\Textarea::make('notes')
+                            ->label('Notes')
+                            ->rows(2),
+                    ])
+                    ->action(function ($record, array $data) {
+                        $repayment = $record->repayments()->create([
+                            'amount_paid'  => $data['amount_paid'],
+                            'payment_date' => $data['payment_date'],
+                            'notes'        => $data['notes'] ?? null,
+                        ]);
+
+                        // Note: Le solde du prêt et son statut sont mis à jour automatiquement 
+                        // par le "boot method" du modèle LoanRepayment lors de la création.
+
+                        // Enregistrer l'entrée dans la caisse
+                        app(FundService::class)->logMovement(
+                            'inflow',
+                            $data['amount_paid'],
+                            "Remboursement prêt #{$record->id} — {$record->member->full_name}",
+                            $repayment
+                        );
+
+                        Notification::make()
+                            ->title('Remboursement enregistré')
+                            ->body('Le solde du prêt a été mis à jour.')
+                            ->success()
+                            ->send();
+                    }),
             ])
             ->defaultSort('created_at', 'desc');
     }
@@ -194,14 +291,14 @@ class LoanResource extends Resource
         return $infolist->schema([
             Infolists\Components\Section::make('Détails du Prêt')
                 ->schema([
-                    Infolists\Components\TextEntry::make('member.user.name')->label('Membre'),
-                    Infolists\Components\TextEntry::make('principal_amount')->label('Capital')->money('HTG'),
+                    Infolists\Components\TextEntry::make('member.full_name')->label('Membre'),
+                    Infolists\Components\TextEntry::make('principal_amount')->label('Capital')->money('USD'),
                     Infolists\Components\TextEntry::make('interest_rate')->label('Taux')->suffix('%'),
                     Infolists\Components\TextEntry::make('term_months')->label('Durée')->suffix(' mois'),
-                    Infolists\Components\TextEntry::make('total_to_repay')->label('Total à rembourser')->money('HTG'),
-                    Infolists\Components\TextEntry::make('balance_remaining')->label('Solde restant')->money('HTG'),
+                    Infolists\Components\TextEntry::make('total_to_repay')->label('Total à rembourser')->money('USD'),
+                    Infolists\Components\TextEntry::make('balance_remaining')->label('Solde restant')->money('USD'),
                     Infolists\Components\TextEntry::make('status')->label('Statut')->badge(),
-                    Infolists\Components\TextEntry::make('disbursement_date')->label('Date de décaissement')->date('d/m/Y'),
+                    Infolists\Components\TextEntry::make('disbursement_date')->label('Décaissement')->date('d/m/Y'),
                     Infolists\Components\TextEntry::make('due_date')->label('Échéance')->date('d/m/Y'),
                 ])->columns(3),
         ]);
@@ -218,17 +315,17 @@ class LoanResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListLoans::route('/'),
+            'index'  => Pages\ListLoans::route('/'),
             'create' => Pages\CreateLoan::route('/create'),
-            'view' => Pages\ViewLoan::route('/{record}'),
-            'edit' => Pages\EditLoan::route('/{record}/edit'),
+            'view'   => Pages\ViewLoan::route('/{record}'),
+            'edit'   => Pages\EditLoan::route('/{record}/edit'),
         ];
     }
 
     public static function getNavigationBadge(): ?string
     {
         $pending = static::getModel()::where('status', 'pending')->count();
-        return $pending > 0 ? (string)$pending : null;
+        return $pending > 0 ? (string) $pending : null;
     }
 
     public static function getNavigationBadgeColor(): ?string { return 'warning'; }

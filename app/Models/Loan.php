@@ -43,6 +43,12 @@ class Loan extends Model
         return $this->hasMany(LoanRepayment::class);
     }
 
+    public function schedules(): HasMany
+    {
+        return $this->hasMany(LoanSchedule::class);
+    }
+
+
     public function validations(): MorphMany
     {
         return $this->morphMany(Validation::class, 'valuable');

@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use Filament\Http\Middleware\Authenticate;
+use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Navigation\NavigationGroup;
@@ -11,15 +12,10 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Widgets;
-use App\Filament\Widgets\StatsOverviewWidget;
-use App\Filament\Widgets\ContributionChartWidget;
-use App\Filament\Widgets\FundDistributionWidget;
-use App\Filament\Widgets\RecentActivitiesWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
-use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
@@ -36,30 +32,35 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Indigo,
                 'success' => Color::Emerald,
                 'warning' => Color::Amber,
-                'danger' => Color::Rose,
-                'gray' => Color::Slate,
+                'danger'  => Color::Rose,
+                'gray'    => Color::Slate,
             ])
             ->brandName('Mutulle')
-            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
-            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
-            ->pages([Pages\Dashboard::class])
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
+            ->discoverResources(
+                in: app_path('Filament/Resources'),
+                for: 'App\\Filament\\Resources'
+            )
+            ->discoverPages(
+                in: app_path('Filament/Pages'),
+                for: 'App\\Filament\\Pages'
+            )
+            ->pages([
+                Pages\Dashboard::class,
+            ])
+            ->discoverWidgets(
+                in: app_path('Filament/Widgets'),
+                for: 'App\\Filament\\Widgets'
+            )
             ->widgets([
                 Widgets\AccountWidget::class,
             ])
             ->navigationGroups([
-                NavigationGroup::make('Gestion des Membres')
-                    ->icon('heroicon-o-users'),
-                NavigationGroup::make('Finances')
-                    ->icon('heroicon-o-banknotes'),
-                NavigationGroup::make('Prêts')
-                    ->icon('heroicon-o-credit-card'),
-                NavigationGroup::make('Demandes')
-                    ->icon('heroicon-o-inbox-stack'),
-                NavigationGroup::make('Rapports & Analyses')
-                    ->icon('heroicon-o-chart-bar'),
-                NavigationGroup::make('Administration')
-                    ->icon('heroicon-o-cog-6-tooth'),
+                NavigationGroup::make('Gestion des Membres'),
+                NavigationGroup::make('Finances'),
+                NavigationGroup::make('Prêts'),
+                NavigationGroup::make('Demandes'),
+                NavigationGroup::make('Rapports & Analyses'),
+                NavigationGroup::make('Administration'),
             ])
             ->middleware([
                 EncryptCookies::class,

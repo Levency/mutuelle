@@ -28,7 +28,7 @@ class ContributionChartWidget extends ChartWidget
         return [
             'datasets' => [
                 [
-                    'label' => 'Cotisations (HTG)',
+                    'label' => 'Cotisations ($)',
                     'data' => $data,
                     'backgroundColor' => 'rgba(99, 102, 241, 0.2)',
                     'borderColor' => 'rgba(99, 102, 241, 1)',

@@ -30,7 +30,7 @@ class FundResource extends Resource
                         ->options(['inflow' => '↑ Entrée', 'outflow' => '↓ Sortie'])
                         ->required(),
                     Forms\Components\TextInput::make('amount')
-                        ->label('Montant (HTG)')
+                        ->label('Montant ($)')
                         ->numeric()
                         ->required()
                         ->minValue(0.01),
@@ -52,7 +52,7 @@ class FundResource extends Resource
                     ->formatStateUsing(fn($state) => $state === 'inflow' ? '↑ Entrée' : '↓ Sortie'),
                 Tables\Columns\TextColumn::make('amount')
                     ->label('Montant')
-                    ->money('HTG')
+                    ->money('USD')
                     ->sortable()
                     ->color(fn($record) => $record->type === 'inflow' ? 'success' : 'danger'),
                 Tables\Columns\TextColumn::make('description')
@@ -60,7 +60,7 @@ class FundResource extends Resource
                     ->limit(60),
                 Tables\Columns\TextColumn::make('balance_after')
                     ->label('Solde après')
-                    ->money('HTG')
+                    ->money('USD')
                     ->sortable()
                     ->weight('bold'),
                 Tables\Columns\TextColumn::make('created_at')

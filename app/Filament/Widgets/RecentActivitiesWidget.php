@@ -29,7 +29,7 @@ class RecentActivitiesWidget extends BaseWidget
                     ->formatStateUsing(fn($state) => $state === 'inflow' ? '↑ Entrée' : '↓ Sortie'),
                 Tables\Columns\TextColumn::make('amount')
                     ->label('Montant')
-                    ->money('HTG'),
+                    ->money('USD'),
                 Tables\Columns\TextColumn::make('description')
                     ->label('Description')
                     ->limit(70),
