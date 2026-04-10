@@ -119,8 +119,15 @@ class LoanResource extends Resource
 
             Forms\Components\Section::make('Dates')
                 ->schema([
-                    Forms\Components\DatePicker::make('disbursement_date')->label('Date de décaissement'),
-                    Forms\Components\DatePicker::make('due_date')->label('Date d\'échéance finale'),
+                    Forms\Components\DatePicker::make('disbursement_date')
+                        ->label('Date de décaissement')
+                        ->live()
+                        ->afterStateUpdated(fn(Get $get, Set $set) => self::recalculate($get, $set)),
+                    
+                    Forms\Components\DatePicker::make('due_date')
+                        ->label('Date d\'échéance finale')
+                        ->readonly()
+                        ->helperText('Calculée automatiquement selon la durée.'),
                 ])->columns(2),
 
             Forms\Components\Hidden::make('total_to_repay'),
@@ -133,9 +140,17 @@ class LoanResource extends Resource
         $principal = floatval($get('principal_amount') ?? 0);
         $rate      = floatval($get('interest_rate') ?? 0);
         $months    = intval($get('term_months') ?? 0);
+        
+        // Calcul financier
         $total     = $principal + ($principal * ($rate / 100) * ($months / 12));
         $set('total_to_repay', round($total, 2));
         $set('balance_remaining', round($total, 2));
+
+        // Calcul de la date d'échéance
+        $startDate = $get('disbursement_date');
+        if ($startDate && $months > 0) {
+            $set('due_date', \Carbon\Carbon::parse($startDate)->addMonths($months)->format('Y-m-d'));
+        }
     }
 
     public static function table(Table $table): Table
@@ -213,6 +228,9 @@ class LoanResource extends Resource
                         }
 
                         $record->update(['status' => 'active', 'disbursement_date' => now()]);
+
+                        // Générer automatiquement l'échéancier de remboursement
+                        $record->generateSchedules();
 
                         // Enregistrer la sortie dans le journal de caisse
                         $service->logMovement(

@@ -20,9 +20,9 @@ class RepaymentsRelationManager extends RelationManager
     {
         return $form->schema([
             Forms\Components\DatePicker::make('payment_date')->label('Date de paiement')->required()->default(now()),
-            Forms\Components\TextInput::make('amount_paid')->label('Montant payé (HTG)')->numeric()->required(),
-            Forms\Components\TextInput::make('principal_paid')->label('Capital remboursé (HTG)')->numeric()->default(0),
-            Forms\Components\TextInput::make('interest_paid')->label('Intérêts payés (HTG)')->numeric()->default(0),
+            Forms\Components\TextInput::make('amount_paid')->label('Montant payé ($)')->numeric()->required(),
+            Forms\Components\Hidden::make('principal_paid')->default(0),
+            Forms\Components\Hidden::make('interest_paid')->default(0),
             Forms\Components\Select::make('payment_method')
                 ->label('Mode de paiement')
                 ->options(['cash' => 'Espèces', 'transfer' => 'Virement', 'check' => 'Chèque'])
@@ -34,9 +34,7 @@ class RepaymentsRelationManager extends RelationManager
     {
         return $table->columns([
             Tables\Columns\TextColumn::make('receipt_number')->label('N° Reçu')->copyable(),
-            Tables\Columns\TextColumn::make('amount_paid')->label('Montant payé')->money('HTG'),
-            Tables\Columns\TextColumn::make('principal_paid')->label('Capital')->money('HTG'),
-            Tables\Columns\TextColumn::make('interest_paid')->label('Intérêts')->money('HTG'),
+            Tables\Columns\TextColumn::make('amount_paid')->label('Montant payé')->money('USD'),
             Tables\Columns\TextColumn::make('payment_date')->label('Date')->date('d/m/Y'),
             Tables\Columns\BadgeColumn::make('payment_method')->label('Mode')
                 ->formatStateUsing(fn($state) => match($state) {
@@ -47,15 +45,9 @@ class RepaymentsRelationManager extends RelationManager
                 ->mutateFormDataUsing(fn(array $data) => array_merge($data, [
                     'receipt_number' => 'RPMT-' . strtoupper(Str::random(8)),
                 ]))
-                ->after(function ($record) {
-                    // Log fund outflow — actually this is inflow (member repays)
-                    Fund::create([
-                        'type' => 'inflow',
-                        'amount' => $record->amount_paid,
-                        'description' => "Remboursement prêt #{$record->loan_id} — {$record->receipt_number}",
-                        'reference_type' => LoanRepayment::class,
-                        'reference_id' => $record->id,
-                    ]);
+                ->after(function ($livewire) {
+                    // Recalculer l'échéancier après l'ajout d'un remboursement
+                    $livewire->getOwnerRecord()->recalculateSchedules();
                 }),
         ])->actions([Tables\Actions\DeleteAction::make()]);
     }
