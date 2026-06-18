@@ -24,5 +24,11 @@ class DatabaseSeeder extends Seeder
 
         // Paramètres par défaut
         $this->call(SettingsSeeder::class);
+
+        // Importer les membres
+        $this->call(MembersSeeder::class);
+
+        // Importer les cotisations
+        $this->call(ContributionsSeeder::class);
     }
 }
