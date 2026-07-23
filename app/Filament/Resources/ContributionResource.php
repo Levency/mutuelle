@@ -63,7 +63,8 @@ class ContributionResource extends Resource
                             $rate = floatval(Setting::get('solidarity_rate', 20)) / 100;
                             $sol = round($total * $rate, 2);
                             $main = $total - $sol;
-                            return "Caisse : " . number_format($main, 2) . " $ | Solidarité : " . number_format($sol, 2) . " $ (" . ($rate * 100) . "%)";
+                            $currency = \App\Models\Setting::get('currency', 'USD');
+                            return "Caisse : " . number_format($main, 2) . " {$currency} | Solidarité : " . number_format($sol, 2) . " {$currency} (" . ($rate * 100) . "%)";
                         }),
 
                     Forms\Components\Textarea::make('notes')
@@ -90,7 +91,7 @@ class ContributionResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('amount')
                     ->label('Montant')
-                    ->money('USD')
+                    ->money(\App\Models\Setting::get('currency', 'USD'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('payment_date')
                     ->label('Date')
@@ -134,6 +135,7 @@ class ContributionResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -189,7 +191,7 @@ class ContributionResource extends Resource
                             Infolists\Components\Group::make([
                                 Infolists\Components\TextEntry::make('amount')
                                     ->label('Montant Total')
-                                    ->money('USD')
+                                    ->money(\App\Models\Setting::get('currency', 'USD'))
                                     ->size('lg')
                                     ->weight('bold'),
                                 Infolists\Components\TextEntry::make('split_preview')
@@ -199,7 +201,8 @@ class ContributionResource extends Resource
                                         $rate = (float) Setting::get('solidarity_rate', 20) / 100;
                                         $sol = $total * $rate;
                                         $main = $total - $sol;
-                                        return number_format($main, 2) . ' $ / ' . number_format($sol, 2) . ' $';
+                                        $currency = \App\Models\Setting::get('currency', 'USD');
+                                        return number_format($main, 2) . " {$currency} / " . number_format($sol, 2) . " {$currency}";
                                     })
                                     ->icon('heroicon-o-arrows-right-left'),
                             ]),

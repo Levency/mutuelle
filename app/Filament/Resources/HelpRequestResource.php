@@ -75,7 +75,7 @@ class HelpRequestResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('member.full_name')->label('Membre')->searchable()->sortable(),
                 Tables\Columns\TextColumn::make('reason')->label('Motif')->limit(40),
-                Tables\Columns\TextColumn::make('amount_requested')->label('Montant demandé')->money('USD'),
+                Tables\Columns\TextColumn::make('amount_requested')->label('Montant demandé')->money(\App\Models\Setting::get('currency', 'USD')),
                 Tables\Columns\TextColumn::make('status')
                     ->label('Statut')
                     ->badge()
@@ -168,7 +168,7 @@ class HelpRequestResource extends Resource
                 ->schema([
                     Infolists\Components\TextEntry::make('member.full_name')->label('Membre'),
                     Infolists\Components\TextEntry::make('reason')->label('Motif'),
-                    Infolists\Components\TextEntry::make('amount_requested')->label('Montant')->money('USD'),
+                    Infolists\Components\TextEntry::make('amount_requested')->label('Montant')->money(\App\Models\Setting::get('currency', 'USD')),
                     Infolists\Components\TextEntry::make('status')->label('Statut')->badge(),
                     Infolists\Components\TextEntry::make('description')->label('Description'),
                 ])->columns(2),

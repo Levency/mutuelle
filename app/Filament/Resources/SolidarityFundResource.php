@@ -57,12 +57,12 @@ class SolidarityFundResource extends Resource
                     ->formatStateUsing(fn($state) => $state === 'inflow' ? 'Entrée' : 'Sortie'),
                 Tables\Columns\TextColumn::make('amount')
                     ->label('Montant')
-                    ->money('USD')
+                    ->money(\App\Models\Setting::get('currency', 'USD'))
                     ->sortable()
                     ->color(fn($record) => $record->type === 'inflow' ? 'success' : 'danger'),
                 Tables\Columns\TextColumn::make('balance_after')
                     ->label('Solde après')
-                    ->money('USD'),
+                    ->money(\App\Models\Setting::get('currency', 'USD')),
                 Tables\Columns\TextColumn::make('description')
                     ->label('Description')
                     ->limit(50)

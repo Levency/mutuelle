@@ -125,7 +125,14 @@ class MemberResource extends Resource
 
                 Tables\Columns\TextColumn::make('full_name')
                     ->label('Nom complet')
-                    ->searchable(['first_name', 'last_name', 'user.name'])
+                    ->searchable(query: function (\Illuminate\Database\Eloquent\Builder $query, string $search): \Illuminate\Database\Eloquent\Builder {
+                        return $query
+                            ->where('first_name', 'like', "%{$search}%")
+                            ->orWhere('last_name', 'like', "%{$search}%")
+                            ->orWhereHas('user', function ($q) use ($search) {
+                                $q->where('name', 'like', "%{$search}%");
+                            });
+                    })
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('phone')
@@ -134,7 +141,7 @@ class MemberResource extends Resource
 
                 Tables\Columns\TextColumn::make('total_contributed')
                     ->label('Total cotisé')
-                    ->money('USD')
+                    ->money(\App\Models\Setting::get('currency', 'USD'))
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('confidence_score')

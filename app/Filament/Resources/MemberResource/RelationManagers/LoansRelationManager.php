@@ -25,9 +25,9 @@ class LoansRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table->columns([
-            Tables\Columns\TextColumn::make('principal_amount')->label('Capital')->money('HTG'),
-            Tables\Columns\TextColumn::make('total_to_repay')->label('Total à rembourser')->money('HTG'),
-            Tables\Columns\TextColumn::make('balance_remaining')->label('Solde restant')->money('HTG'),
+            Tables\Columns\TextColumn::make('principal_amount')->label('Capital')->money(\App\Models\Setting::get('currency', 'USD')),
+            Tables\Columns\TextColumn::make('total_to_repay')->label('Total à rembourser')->money(\App\Models\Setting::get('currency', 'USD')),
+            Tables\Columns\TextColumn::make('balance_remaining')->label('Solde restant')->money(\App\Models\Setting::get('currency', 'USD')),
             Tables\Columns\BadgeColumn::make('status')->label('Statut')
                 ->colors([
                     'warning' => 'pending', 'success' => 'active',

@@ -30,7 +30,7 @@ class ContributionsRelationManager extends RelationManager
     {
         return $table->columns([
             Tables\Columns\TextColumn::make('receipt_number')->label('N° Reçu')->copyable(),
-            Tables\Columns\TextColumn::make('amount')->label('Montant')->money('HTG'),
+            Tables\Columns\TextColumn::make('amount')->label('Montant')->money(\App\Models\Setting::get('currency', 'USD')),
             Tables\Columns\TextColumn::make('payment_date')->label('Date')->date('d/m/Y'),
             Tables\Columns\BadgeColumn::make('status')->label('Statut')
                 ->colors(['success' => 'paid', 'danger' => 'late', 'warning' => 'pending'])
