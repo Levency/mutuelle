@@ -11,6 +11,8 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Notifications\Notification;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 
 class MemberResource extends Resource
 {
@@ -209,6 +211,48 @@ class MemberResource extends Resource
                 ]),
             ])
             ->defaultSort('joined_at', 'desc');
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Infolists\Components\Section::make('Informations Personnelles')
+                    ->schema([
+                        Infolists\Components\TextEntry::make('member_number')->label('N° Membre')->weight('bold'),
+                        Infolists\Components\TextEntry::make('first_name')->label('Prénom'),
+                        Infolists\Components\TextEntry::make('last_name')->label('Nom de famille'),
+                        Infolists\Components\TextEntry::make('phone')->label('Téléphone'),
+                        Infolists\Components\TextEntry::make('national_id')->label('N° Identité'),
+                        Infolists\Components\TextEntry::make('birth_date')->label('Date de naissance')->date('d/m/Y'),
+                        Infolists\Components\TextEntry::make('profession')->label('Profession'),
+                        Infolists\Components\TextEntry::make('address')->label('Adresse complète')->columnSpanFull(),
+                    ])->columns(3),
+                Infolists\Components\Section::make('Statut et Adhésion')
+                    ->schema([
+                        Infolists\Components\TextEntry::make('status')->label('Statut')->badge()
+                            ->color(fn($state) => match($state) {
+                                'active'    => 'success',
+                                'suspended' => 'danger',
+                                default     => 'gray',
+                            })
+                            ->formatStateUsing(fn($state) => match($state) {
+                                'active'    => 'Actif',
+                                'suspended' => 'Suspendu',
+                                'inactive'  => 'Inactif',
+                                default     => $state,
+                            }),
+                        Infolists\Components\TextEntry::make('joined_at')->label('Date d\'adhésion')->date('d/m/Y'),
+                        Infolists\Components\TextEntry::make('confidence_score')->label('Score de confiance')->suffix('%'),
+                        Infolists\Components\TextEntry::make('total_contributed')->label('Total cotisé')
+                            ->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'Gourdes')),
+                    ])->columns(4),
+                Infolists\Components\Section::make('Contact d\'Urgence')
+                    ->schema([
+                        Infolists\Components\TextEntry::make('emergency_contact')->label('Nom du contact'),
+                        Infolists\Components\TextEntry::make('emergency_phone')->label('Téléphone'),
+                    ])->columns(2),
+            ]);
     }
 
     public static function getRelationManagers(): array

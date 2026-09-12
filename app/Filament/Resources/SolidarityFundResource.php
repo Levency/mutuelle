@@ -9,6 +9,8 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 
 class SolidarityFundResource extends Resource
 {
@@ -72,9 +74,31 @@ class SolidarityFundResource extends Resource
                 Tables\Filters\SelectFilter::make('type')
                     ->options(['inflow' => 'Entrée', 'outflow' => 'Sortie']),
             ])
-            ->actions([])
+            ->actions([
+                Tables\Actions\ViewAction::make(),
+            ])
             ->bulkActions([])
             ->defaultSort('created_at', 'desc');
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Infolists\Components\Section::make('Détails du Mouvement de Solidarité')
+                    ->schema([
+                        Infolists\Components\TextEntry::make('type')->label('Type')
+                            ->badge()
+                            ->color(fn($state) => $state === 'inflow' ? 'success' : 'danger')
+                            ->formatStateUsing(fn($state) => $state === 'inflow' ? '↑ Entrée' : '↓ Sortie'),
+                        Infolists\Components\TextEntry::make('amount')->label('Montant')
+                            ->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'Gourdes')),
+                        Infolists\Components\TextEntry::make('balance_after')->label('Solde après ce mouvement')
+                            ->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'Gourdes')),
+                        Infolists\Components\TextEntry::make('created_at')->label('Date')->dateTime('d/m/Y H:i'),
+                        Infolists\Components\TextEntry::make('description')->label('Description / Motif')->columnSpanFull(),
+                    ])->columns(2),
+            ]);
     }
 
     public static function getPages(): array

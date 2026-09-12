@@ -38,6 +38,13 @@ class ContributionsRelationManager extends RelationManager
                     'paid' => 'Payé', 'late' => 'En retard', 'pending' => 'En attente', default => $state,
                 }),
         ])->headerActions([Tables\Actions\CreateAction::make()])
-          ->actions([Tables\Actions\EditAction::make(), Tables\Actions\DeleteAction::make()]);
+          ->actions([
+              Tables\Actions\Action::make('view')
+                  ->label('Voir')
+                  ->icon('heroicon-s-eye')
+                  ->url(fn ($record) => \App\Filament\Resources\ContributionResource::getUrl('view', ['record' => $record])),
+              Tables\Actions\EditAction::make(),
+              Tables\Actions\DeleteAction::make(),
+          ]);
     }
 }

@@ -10,6 +10,8 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Hash;
+use Filament\Infolists;
+use Filament\Infolists\Infolist;
 
 class UserResource extends Resource
 {
@@ -88,6 +90,20 @@ class UserResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+            ]);
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Infolists\Components\Section::make('Informations Utilisateur')
+                    ->schema([
+                        Infolists\Components\TextEntry::make('name')->label('Nom complet'),
+                        Infolists\Components\TextEntry::make('email')->label('Adresse email'),
+                        Infolists\Components\TextEntry::make('roles.name')->label('Rôles')->badge()->color('info'),
+                        Infolists\Components\TextEntry::make('created_at')->label('Créé le')->dateTime('d/m/Y H:i'),
+                    ])->columns(2),
             ]);
     }
 

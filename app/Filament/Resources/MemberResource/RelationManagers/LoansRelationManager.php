@@ -33,6 +33,11 @@ class LoansRelationManager extends RelationManager
                     'warning' => 'pending', 'success' => 'active',
                     'gray' => 'repaid', 'danger' => 'defaulted', 'info' => 'rejected',
                 ]),
+        ])->actions([
+            Tables\Actions\Action::make('view')
+                ->label('Voir le prêt')
+                ->icon('heroicon-s-eye')
+                ->url(fn ($record) => \App\Filament\Resources\LoanResource::getUrl('view', ['record' => $record])),
         ]);
     }
 }
