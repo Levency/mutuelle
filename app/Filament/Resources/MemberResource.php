@@ -218,40 +218,56 @@ class MemberResource extends Resource
         return $infolist
             ->schema([
                 Infolists\Components\Section::make('Informations Personnelles')
+                    ->description('Les détails personnels du membre')
+                    ->icon('heroicon-o-identification')
                     ->schema([
-                        Infolists\Components\TextEntry::make('member_number')->label('N° Membre')->weight('bold'),
-                        Infolists\Components\TextEntry::make('first_name')->label('Prénom'),
-                        Infolists\Components\TextEntry::make('last_name')->label('Nom de famille'),
-                        Infolists\Components\TextEntry::make('phone')->label('Téléphone'),
-                        Infolists\Components\TextEntry::make('national_id')->label('N° Identité'),
-                        Infolists\Components\TextEntry::make('birth_date')->label('Date de naissance')->date('d/m/Y'),
-                        Infolists\Components\TextEntry::make('profession')->label('Profession'),
-                        Infolists\Components\TextEntry::make('address')->label('Adresse complète')->columnSpanFull(),
-                    ])->columns(3),
+                        Infolists\Components\Grid::make(3)
+                            ->schema([
+                                Infolists\Components\TextEntry::make('member_number')->label('N° Membre')->weight('bold')->badge()->color('primary'),
+                                Infolists\Components\TextEntry::make('first_name')->label('Prénom')->icon('heroicon-m-user'),
+                                Infolists\Components\TextEntry::make('last_name')->label('Nom de famille')->icon('heroicon-m-user'),
+                                Infolists\Components\TextEntry::make('phone')->label('Téléphone')->icon('heroicon-m-phone'),
+                                Infolists\Components\TextEntry::make('national_id')->label('N° Identité')->icon('heroicon-m-identification'),
+                                Infolists\Components\TextEntry::make('birth_date')->label('Date de naissance')->date('d/m/Y')->icon('heroicon-m-calendar'),
+                                Infolists\Components\TextEntry::make('profession')->label('Profession')->icon('heroicon-m-briefcase'),
+                                Infolists\Components\TextEntry::make('address')->label('Adresse complète')->columnSpanFull()->icon('heroicon-m-map-pin'),
+                            ]),
+                    ])->collapsible(),
                 Infolists\Components\Section::make('Statut et Adhésion')
+                    ->description('Informations sur le compte de la mutuelle')
+                    ->icon('heroicon-o-chart-bar')
                     ->schema([
-                        Infolists\Components\TextEntry::make('status')->label('Statut')->badge()
-                            ->color(fn($state) => match($state) {
-                                'active'    => 'success',
-                                'suspended' => 'danger',
-                                default     => 'gray',
-                            })
-                            ->formatStateUsing(fn($state) => match($state) {
-                                'active'    => 'Actif',
-                                'suspended' => 'Suspendu',
-                                'inactive'  => 'Inactif',
-                                default     => $state,
-                            }),
-                        Infolists\Components\TextEntry::make('joined_at')->label('Date d\'adhésion')->date('d/m/Y'),
-                        Infolists\Components\TextEntry::make('confidence_score')->label('Score de confiance')->suffix('%'),
-                        Infolists\Components\TextEntry::make('total_contributed')->label('Total cotisé')
-                            ->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'Gourdes')),
-                    ])->columns(4),
+                        Infolists\Components\Grid::make(4)
+                            ->schema([
+                                Infolists\Components\TextEntry::make('status')->label('Statut')->badge()
+                                    ->color(fn($state) => match($state) {
+                                        'active'    => 'success',
+                                        'suspended' => 'danger',
+                                        default     => 'gray',
+                                    })
+                                    ->formatStateUsing(fn($state) => match($state) {
+                                        'active'    => 'Actif',
+                                        'suspended' => 'Suspendu',
+                                        'inactive'  => 'Inactif',
+                                        default     => $state,
+                                    })->icon('heroicon-m-check-badge'),
+                                Infolists\Components\TextEntry::make('joined_at')->label('Date d\'adhésion')->date('d/m/Y')->icon('heroicon-m-calendar'),
+                                Infolists\Components\TextEntry::make('confidence_score')->label('Score de confiance')->suffix('%')->badge()->color('warning'),
+                                Infolists\Components\TextEntry::make('total_contributed')->label('Total cotisé')
+                                    ->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'Gourdes'))
+                                    ->badge()->color('success'),
+                            ]),
+                    ])->collapsible(),
                 Infolists\Components\Section::make('Contact d\'Urgence')
+                    ->description('En cas de nécessité')
+                    ->icon('heroicon-o-phone')
                     ->schema([
-                        Infolists\Components\TextEntry::make('emergency_contact')->label('Nom du contact'),
-                        Infolists\Components\TextEntry::make('emergency_phone')->label('Téléphone'),
-                    ])->columns(2),
+                        Infolists\Components\Grid::make(2)
+                            ->schema([
+                                Infolists\Components\TextEntry::make('emergency_contact')->label('Nom du contact')->icon('heroicon-m-user-group'),
+                                Infolists\Components\TextEntry::make('emergency_phone')->label('Téléphone')->icon('heroicon-m-phone'),
+                            ]),
+                    ])->collapsible(),
             ]);
     }
 

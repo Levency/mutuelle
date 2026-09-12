@@ -149,6 +149,8 @@ class ContributionResource extends Resource
     {
         return $infolist->schema([
             Infolists\Components\Section::make('Détails de la Cotisation')
+                ->description('Reçu et statut du paiement')
+                ->icon('heroicon-o-document-text')
                 ->schema([
                     Infolists\Components\Grid::make(3)
                         ->schema([
@@ -156,10 +158,12 @@ class ContributionResource extends Resource
                                 ->label('N° de Reçu')
                                 ->weight('bold')
                                 ->copyable()
-                                ->color('primary'),
+                                ->color('primary')
+                                ->icon('heroicon-m-hashtag'),
                             Infolists\Components\TextEntry::make('payment_date')
                                 ->label('Date de Paiement')
-                                ->date('d F Y'),
+                                ->date('d F Y')
+                                ->icon('heroicon-m-calendar'),
                             Infolists\Components\TextEntry::make('status')
                                 ->label('Statut')
                                 ->badge()
@@ -174,26 +178,30 @@ class ContributionResource extends Resource
                                     'pending' => 'En attente',
                                     'late'    => 'En retard',
                                     default   => $state,
-                                }),
+                                })
+                                ->icon('heroicon-m-check-badge'),
                         ]),
-                ]),
+                ])->collapsible(),
 
             Infolists\Components\Section::make('Informations Membre & Financières')
+                ->description('Répartition du paiement')
+                ->icon('heroicon-o-banknotes')
                 ->schema([
                     Infolists\Components\Grid::make(2)
                         ->schema([
                             Infolists\Components\Group::make([
                                 Infolists\Components\TextEntry::make('member.full_name')
-                                    ->label('Membre'),
+                                    ->label('Membre')->icon('heroicon-m-user'),
                                 Infolists\Components\TextEntry::make('member.member_number')
-                                    ->label('Identifiant Membre'),
+                                    ->label('Identifiant Membre')->icon('heroicon-m-identification'),
                             ]),
                             Infolists\Components\Group::make([
                                 Infolists\Components\TextEntry::make('amount')
                                     ->label('Montant Total')
                                     ->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'Gourdes'))
                                     ->size('lg')
-                                    ->weight('bold'),
+                                    ->weight('bold')
+                                    ->icon('heroicon-m-currency-dollar'),
                                 Infolists\Components\TextEntry::make('split_preview')
                                     ->label('Répartition (Caisse / Solidarité)')
                                     ->getStateUsing(function ($record) {
@@ -210,8 +218,9 @@ class ContributionResource extends Resource
                     Infolists\Components\TextEntry::make('notes')
                         ->label('Notes complémentaires')
                         ->placeholder('Aucune note saisie.')
-                        ->columnSpanFull(),
-                ]),
+                        ->columnSpanFull()
+                        ->icon('heroicon-m-document'),
+                ])->collapsible(),
         ]);
     }
 

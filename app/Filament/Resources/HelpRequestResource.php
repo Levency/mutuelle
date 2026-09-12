@@ -165,13 +165,18 @@ class HelpRequestResource extends Resource
     {
         return $infolist->schema([
             Infolists\Components\Section::make("Demande d'Aide")
+                ->description('Détails de la demande soumise par le membre')
+                ->icon('heroicon-o-inbox-stack')
                 ->schema([
-                    Infolists\Components\TextEntry::make('member.full_name')->label('Membre'),
-                    Infolists\Components\TextEntry::make('reason')->label('Motif'),
-                    Infolists\Components\TextEntry::make('amount_requested')->label('Montant')->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'Gourdes')),
-                    Infolists\Components\TextEntry::make('status')->label('Statut')->badge(),
-                    Infolists\Components\TextEntry::make('description')->label('Description'),
-                ])->columns(2),
+                    Infolists\Components\Grid::make(2)
+                        ->schema([
+                            Infolists\Components\TextEntry::make('member.full_name')->label('Membre')->icon('heroicon-m-user'),
+                            Infolists\Components\TextEntry::make('reason')->label('Motif')->icon('heroicon-m-tag'),
+                            Infolists\Components\TextEntry::make('amount_requested')->label('Montant')->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'Gourdes'))->icon('heroicon-m-currency-dollar'),
+                            Infolists\Components\TextEntry::make('status')->label('Statut')->badge()->icon('heroicon-m-check-badge'),
+                            Infolists\Components\TextEntry::make('description')->label('Description')->columnSpanFull()->icon('heroicon-m-document-text'),
+                        ]),
+                ])->collapsible(),
         ]);
     }
 

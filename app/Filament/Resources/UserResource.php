@@ -97,13 +97,30 @@ class UserResource extends Resource
     {
         return $infolist
             ->schema([
-                Infolists\Components\Section::make('Informations Utilisateur')
+                Infolists\Components\Section::make('Informations Profil')
+                    ->description('Détails de l\'utilisateur')
+                    ->icon('heroicon-o-user')
                     ->schema([
-                        Infolists\Components\TextEntry::make('name')->label('Nom complet'),
-                        Infolists\Components\TextEntry::make('email')->label('Adresse email'),
-                        Infolists\Components\TextEntry::make('roles.name')->label('Rôles')->badge()->color('info'),
-                        Infolists\Components\TextEntry::make('created_at')->label('Créé le')->dateTime('d/m/Y H:i'),
-                    ])->columns(2),
+                        Infolists\Components\Grid::make(2)
+                            ->schema([
+                                Infolists\Components\TextEntry::make('name')
+                                    ->label('Nom complet')
+                                    ->badge()
+                                    ->color('primary'),
+                                Infolists\Components\TextEntry::make('email')
+                                    ->label('Adresse email')
+                                    ->icon('heroicon-m-envelope'),
+                                Infolists\Components\TextEntry::make('roles.name')
+                                    ->label('Rôles')
+                                    ->badge()
+                                    ->color('info')
+                                    ->icon('heroicon-m-shield-check'),
+                                Infolists\Components\TextEntry::make('created_at')
+                                    ->label('Créé le')
+                                    ->dateTime('d/m/Y H:i')
+                                    ->icon('heroicon-m-calendar'),
+                            ]),
+                    ])->collapsible(),
             ]);
     }
 

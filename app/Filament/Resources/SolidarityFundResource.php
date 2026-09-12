@@ -86,18 +86,27 @@ class SolidarityFundResource extends Resource
         return $infolist
             ->schema([
                 Infolists\Components\Section::make('Détails du Mouvement de Solidarité')
+                    ->description('Détails de l\'entrée ou sortie du fonds de solidarité')
+                    ->icon('heroicon-o-heart')
                     ->schema([
-                        Infolists\Components\TextEntry::make('type')->label('Type')
-                            ->badge()
-                            ->color(fn($state) => $state === 'inflow' ? 'success' : 'danger')
-                            ->formatStateUsing(fn($state) => $state === 'inflow' ? '↑ Entrée' : '↓ Sortie'),
-                        Infolists\Components\TextEntry::make('amount')->label('Montant')
-                            ->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'Gourdes')),
-                        Infolists\Components\TextEntry::make('balance_after')->label('Solde après ce mouvement')
-                            ->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'Gourdes')),
-                        Infolists\Components\TextEntry::make('created_at')->label('Date')->dateTime('d/m/Y H:i'),
-                        Infolists\Components\TextEntry::make('description')->label('Description / Motif')->columnSpanFull(),
-                    ])->columns(2),
+                        Infolists\Components\Grid::make(2)
+                            ->schema([
+                                Infolists\Components\TextEntry::make('type')->label('Type')
+                                    ->badge()
+                                    ->color(fn($state) => $state === 'inflow' ? 'success' : 'danger')
+                                    ->formatStateUsing(fn($state) => $state === 'inflow' ? '↑ Entrée' : '↓ Sortie'),
+                                Infolists\Components\TextEntry::make('amount')->label('Montant')
+                                    ->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'Gourdes'))
+                                    ->icon('heroicon-m-currency-dollar'),
+                                Infolists\Components\TextEntry::make('balance_after')->label('Solde après ce mouvement')
+                                    ->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'Gourdes'))
+                                    ->icon('heroicon-m-scale'),
+                                Infolists\Components\TextEntry::make('created_at')->label('Date')
+                                    ->dateTime('d/m/Y H:i')->icon('heroicon-m-calendar'),
+                                Infolists\Components\TextEntry::make('description')->label('Description / Motif')
+                                    ->columnSpanFull()->icon('heroicon-m-document-text'),
+                            ]),
+                    ])->collapsible(),
             ]);
     }
 
@@ -105,6 +114,7 @@ class SolidarityFundResource extends Resource
     {
         return [
             'index' => Pages\ListSolidarityFunds::route('/'),
+            'view' => Pages\ViewSolidarityFund::route('/{record}'),
         ];
     }
 }

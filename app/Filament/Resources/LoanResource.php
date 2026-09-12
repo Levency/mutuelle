@@ -308,17 +308,22 @@ class LoanResource extends Resource
     {
         return $infolist->schema([
             Infolists\Components\Section::make('Détails du Prêt')
+                ->description('Informations générales et financières du prêt')
+                ->icon('heroicon-o-credit-card')
                 ->schema([
-                    Infolists\Components\TextEntry::make('member.full_name')->label('Membre'),
-                    Infolists\Components\TextEntry::make('principal_amount')->label('Capital')->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'Gourdes')),
-                    Infolists\Components\TextEntry::make('interest_rate')->label('Taux d\'intérêt')->suffix('%'),
-                    Infolists\Components\TextEntry::make('term_months')->label('Durée')->suffix(' mois'),
-                    Infolists\Components\TextEntry::make('total_to_repay')->label('Total à rembourser')->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'Gourdes')),
-                    Infolists\Components\TextEntry::make('balance_remaining')->label('Solde restant')->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'Gourdes')),
-                    Infolists\Components\TextEntry::make('status')->label('Statut')->badge(),
-                    Infolists\Components\TextEntry::make('disbursement_date')->label('Décaissement')->date('d/m/Y'),
-                    Infolists\Components\TextEntry::make('due_date')->label('Échéance')->date('d/m/Y'),
-                ])->columns(3),
+                    Infolists\Components\Grid::make(3)
+                        ->schema([
+                            Infolists\Components\TextEntry::make('member.full_name')->label('Membre')->icon('heroicon-m-user'),
+                            Infolists\Components\TextEntry::make('principal_amount')->label('Capital')->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'Gourdes'))->icon('heroicon-m-currency-dollar'),
+                            Infolists\Components\TextEntry::make('interest_rate')->label('Taux d\'intérêt')->suffix('%')->icon('heroicon-m-receipt-percent'),
+                            Infolists\Components\TextEntry::make('term_months')->label('Durée')->suffix(' mois')->icon('heroicon-m-clock'),
+                            Infolists\Components\TextEntry::make('total_to_repay')->label('Total à rembourser')->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'Gourdes'))->icon('heroicon-m-banknotes'),
+                            Infolists\Components\TextEntry::make('balance_remaining')->label('Solde restant')->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'Gourdes'))->icon('heroicon-m-scale'),
+                            Infolists\Components\TextEntry::make('status')->label('Statut')->badge()->icon('heroicon-m-check-badge'),
+                            Infolists\Components\TextEntry::make('disbursement_date')->label('Décaissement')->date('d/m/Y')->icon('heroicon-m-calendar'),
+                            Infolists\Components\TextEntry::make('due_date')->label('Échéance')->date('d/m/Y')->icon('heroicon-m-calendar-days'),
+                        ]),
+                ])->collapsible(),
         ]);
     }
 
