@@ -72,7 +72,7 @@ class CalculatePenalties extends Command
 
             $penaltyAmount = round($schedule->amount_due * ($lateRate / 100) * $periodsLate, 2);
 
-            $this->line("  → Prêt #{$loan->id} ({$member->full_name}) : {$periodsLate} période(s) = {$penaltyAmount} HTG");
+            $this->line("  → Prêt #{$loan->id} ({$member->full_name}) : {$periodsLate} période(s) = {$penaltyAmount} Gourdes");
 
             if (!$dryRun) {
                 LoanPenalty::create([
@@ -99,9 +99,9 @@ class CalculatePenalties extends Command
     {
         $graceDays   = (int) Setting::get('contribution_late_days', 15);
         $lateType    = Setting::get('contribution_late_type', 'monthly');
-        $lateFee     = (float) Setting::get('contribution_late_fee', 100); // HTG fixe par période
+        $lateFee     = (float) Setting::get('contribution_late_fee', 100); // Gourdes fixe par période
 
-        $this->line("\n💸 Pénalités de cotisations ({$lateFee} HTG par {$lateType}, {$graceDays}j de grâce)");
+        $this->line("\n💸 Pénalités de cotisations ({$lateFee} Gourdes par {$lateType}, {$graceDays}j de grâce)");
 
         /** @var \Illuminate\Database\Eloquent\Collection<int, Contribution> $lateContributions */
         $lateContributions = Contribution::where('status', 'pending')
@@ -122,7 +122,7 @@ class CalculatePenalties extends Command
 
             $penaltyAmount = $lateFee * $periodsLate;
 
-            $this->line("  → {$member->full_name} : {$periodsLate} période(s) = {$penaltyAmount} HTG");
+            $this->line("  → {$member->full_name} : {$periodsLate} période(s) = {$penaltyAmount} Gourdes");
 
             if (!$dryRun) {
                 ContributionPenalty::firstOrCreate(

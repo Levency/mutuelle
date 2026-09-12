@@ -36,7 +36,7 @@
                 <th>Statut</th>
                 <th>Score</th>
                 <th>Cotis. (Nombre)</th>
-                <th>Total Cotisé {{ \App\Models\Setting::get('currency', 'USD') }}</th>
+                <th>Total Cotisé {{ \App\Models\Setting::get('currency', 'Gourdes') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -53,7 +53,7 @@
                 </td>
                 <td style="text-align:center">{{ $m->confidence_score }}%</td>
                 <td style="text-align:center">{{ $m->contributions_count }}</td>
-                <td style="text-align:right; font-weight:bold">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($m->contributions_sum_amount ?? 0, 2) }}</td>
+                <td style="text-align:right; font-weight:bold">{{ \App\Models\Setting::get('currency', 'Gourdes') }} {{ number_format($m->contributions_sum_amount ?? 0, 2) }}</td>
 
             </tr>
             @endforeach

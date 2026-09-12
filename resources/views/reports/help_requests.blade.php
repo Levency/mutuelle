@@ -30,12 +30,12 @@
 </div>
 <div class="content">
     <div class="summary">
-        Montant total approuvé : <span>{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($total_approved, 2) }}</span> &nbsp;|&nbsp;
+        Montant total approuvé : <span>{{ \App\Models\Setting::get('currency', 'Gourdes') }} {{ number_format($total_approved, 2) }}</span> &nbsp;|&nbsp;
         En attente : <span style="color:#dc2626">{{ $pending_count }}</span>
     </div>
     <table>
         <thead>
-            <tr><th>#</th><th>Membre</th><th>Motif</th><th>Montant {{ \App\Models\Setting::get('currency', 'USD') }}</th><th>Statut</th><th>Date</th></tr>
+            <tr><th>#</th><th>Membre</th><th>Motif</th><th>Montant {{ \App\Models\Setting::get('currency', 'Gourdes') }}</th><th>Statut</th><th>Date</th></tr>
         </thead>
         <tbody>
             @forelse($helpRequests as $i => $hr)
@@ -43,7 +43,7 @@
                 <td>{{ $i + 1 }}</td>
                 <td>{{ $hr->member->full_name }}</td>
                 <td>{{ $hr->reason ?? '—' }}</td>
-                <td style="text-align:right; font-weight:bold">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($hr->amount, 2) }}</td>
+                <td style="text-align:right; font-weight:bold">{{ \App\Models\Setting::get('currency', 'Gourdes') }} {{ number_format($hr->amount, 2) }}</td>
 
                 <td>
                     @if($hr->status === 'approved')

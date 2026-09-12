@@ -29,13 +29,13 @@ class RecentActivitiesWidget extends BaseWidget
                     ->formatStateUsing(fn($state) => $state === 'inflow' ? '↑ Entrée' : '↓ Sortie'),
                 Tables\Columns\TextColumn::make('amount')
                     ->label('Montant')
-                    ->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'USD')),
+                    ->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'Gourdes')),
                 Tables\Columns\TextColumn::make('description')
                     ->label('Description')
                     ->limit(70),
                 Tables\Columns\TextColumn::make('balance_after')
                     ->label('Solde après')
-                    ->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'USD')),
+                    ->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'Gourdes')),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Date')
                     ->dateTime('d/m/Y H:i')

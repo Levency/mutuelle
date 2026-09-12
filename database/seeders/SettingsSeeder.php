@@ -33,7 +33,7 @@ class SettingsSeeder extends Seeder
 
             // Général
             ['key' => 'organization_name', 'value' => 'Mutulle', 'group' => 'general', 'label' => 'Nom de la Mutuelle', 'type' => 'string'],
-            ['key' => 'currency', 'value' => '$', 'group' => 'general', 'label' => 'Devise', 'type' => 'string'],
+            ['key' => 'currency', 'value' => 'Gourdes', 'group' => 'general', 'label' => 'Devise', 'type' => 'string'],
 
         ];
 

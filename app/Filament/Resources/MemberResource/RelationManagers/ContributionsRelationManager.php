@@ -18,7 +18,7 @@ class ContributionsRelationManager extends RelationManager
     {
         return $form->schema([
             Forms\Components\DatePicker::make('payment_date')->label('Date de paiement')->required()->default(now()),
-            Forms\Components\TextInput::make('amount')->label('Montant (' . \App\Models\Setting::get('currency', 'HTG') . ')')->numeric()->required(),
+            Forms\Components\TextInput::make('amount')->label('Montant (' . \App\Models\Setting::get('currency', 'Gourdes') . ')')->numeric()->required(),
             Forms\Components\Select::make('status')
                 ->options(['paid' => 'Payé', 'pending' => 'En attente', 'late' => 'En retard'])
                 ->default('paid')->required(),
@@ -30,7 +30,7 @@ class ContributionsRelationManager extends RelationManager
     {
         return $table->columns([
             Tables\Columns\TextColumn::make('receipt_number')->label('N° Reçu')->copyable(),
-            Tables\Columns\TextColumn::make('amount')->label('Montant')->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'USD')),
+            Tables\Columns\TextColumn::make('amount')->label('Montant')->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'Gourdes')),
             Tables\Columns\TextColumn::make('payment_date')->label('Date')->date('d/m/Y'),
             Tables\Columns\BadgeColumn::make('status')->label('Statut')
                 ->colors(['success' => 'paid', 'danger' => 'late', 'warning' => 'pending'])

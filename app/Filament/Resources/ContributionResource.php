@@ -63,7 +63,7 @@ class ContributionResource extends Resource
                             $rate = floatval(Setting::get('solidarity_rate', 20)) / 100;
                             $sol = round($total * $rate, 2);
                             $main = $total - $sol;
-                            $currency = \App\Models\Setting::get('currency', 'USD');
+                            $currency = \App\Models\Setting::get('currency', 'Gourdes');
                             return "Caisse : " . number_format($main, 2) . " {$currency} | Solidarité : " . number_format($sol, 2) . " {$currency} (" . ($rate * 100) . "%)";
                         }),
 
@@ -91,7 +91,7 @@ class ContributionResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('amount')
                     ->label('Montant')
-                    ->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'USD'))
+                    ->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'Gourdes'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('payment_date')
                     ->label('Date')
@@ -191,7 +191,7 @@ class ContributionResource extends Resource
                             Infolists\Components\Group::make([
                                 Infolists\Components\TextEntry::make('amount')
                                     ->label('Montant Total')
-                                    ->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'USD'))
+                                    ->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'Gourdes'))
                                     ->size('lg')
                                     ->weight('bold'),
                                 Infolists\Components\TextEntry::make('split_preview')
@@ -201,7 +201,7 @@ class ContributionResource extends Resource
                                         $rate = (float) Setting::get('solidarity_rate', 20) / 100;
                                         $sol = $total * $rate;
                                         $main = $total - $sol;
-                                        $currency = \App\Models\Setting::get('currency', 'USD');
+                                        $currency = \App\Models\Setting::get('currency', 'Gourdes');
                                         return number_format($main, 2) . " {$currency} / " . number_format($sol, 2) . " {$currency}";
                                     })
                                     ->icon('heroicon-o-arrows-right-left'),
