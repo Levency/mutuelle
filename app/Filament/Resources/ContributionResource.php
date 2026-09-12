@@ -91,7 +91,7 @@ class ContributionResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('amount')
                     ->label('Montant')
-                    ->money(\App\Models\Setting::get('currency', 'USD'))
+                    ->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'USD'))
                     ->sortable(),
                 Tables\Columns\TextColumn::make('payment_date')
                     ->label('Date')
@@ -191,7 +191,7 @@ class ContributionResource extends Resource
                             Infolists\Components\Group::make([
                                 Infolists\Components\TextEntry::make('amount')
                                     ->label('Montant Total')
-                                    ->money(\App\Models\Setting::get('currency', 'USD'))
+                                    ->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'USD'))
                                     ->size('lg')
                                     ->weight('bold'),
                                 Infolists\Components\TextEntry::make('split_preview')

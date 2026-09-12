@@ -25,13 +25,13 @@
     <p>{{ $period_label }} | Généré le {{ $date }}</p>
 </div>
 <div class="content">
-    <div class="summary">Total des dépenses sur la période : <span>$ {{ number_format($total, 2) }}</span></div>
+    <div class="summary">Total des dépenses sur la période : <span>{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($total, 2) }}</span></div>
     <table>
         <thead>
             <tr>
                 <th>Date</th>
                 <th>Description / Motif</th>
-                <th>Montant ($)</th>
+                <th>Montant {{ \App\Models\Setting::get('currency', 'USD') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -39,7 +39,7 @@
             <tr>
                 <td>{{ $e->created_at->format('d/m/Y') }}</td>
                 <td>{{ $e->description }}</td>
-                <td style="text-align:right; font-weight:bold">$ {{ number_format($e->amount, 2) }}</td>
+                <td style="text-align:right; font-weight:bold">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($e->amount, 2) }}</td>
 
             </tr>
             @empty

@@ -34,7 +34,7 @@ class RepaymentsRelationManager extends RelationManager
     {
         return $table->columns([
             Tables\Columns\TextColumn::make('receipt_number')->label('N° Reçu')->copyable(),
-            Tables\Columns\TextColumn::make('amount_paid')->label('Montant payé')->money(\App\Models\Setting::get('currency', 'USD')),
+            Tables\Columns\TextColumn::make('amount_paid')->label('Montant payé')->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'USD')),
             Tables\Columns\TextColumn::make('payment_date')->label('Date')->date('d/m/Y'),
             Tables\Columns\BadgeColumn::make('payment_method')->label('Mode')
                 ->formatStateUsing(fn($state) => match($state) {

@@ -30,15 +30,15 @@
     <div class="audit-box">
         <div class="line">
             <span class="lbl">Solde Brut en Caisse (Entrées - Sorties)</span>
-            <span class="val">$ {{ number_format($gross_balance, 2) }}</span>
+            <span class="val">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($gross_balance, 2) }}</span>
         </div>
         <div class="line">
             <span class="lbl">Moins : Prêts Actifs (Encours non remboursés)</span>
-            <span class="val" style="color:#dc2626">- $ {{ number_format($loans_encumbrance, 2) }}</span>
+            <span class="val" style="color:#dc2626">- {{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($loans_encumbrance, 2) }}</span>
         </div>
         <div class="line total">
             <span class="lbl">SOLDE DISPONIBLE BRUT</span>
-            <span class="val">$ {{ number_format($available_raw, 2) }}</span>
+            <span class="val">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($available_raw, 2) }}</span>
         </div>
     </div>
 
@@ -46,7 +46,7 @@
     <div class="audit-box">
         <div class="line">
             <span class="lbl">Part réservée au Fonds de Solidarité</span>
-            <span class="val">$ {{ number_format($solidarity, 2) }}</span>
+            <span class="val">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($solidarity, 2) }}</span>
         </div>
 
         <div class="line">

@@ -25,10 +25,10 @@
     <p>{{ $period_label }} | Généré le {{ $date }}</p>
 </div>
 <div class="content">
-    <div class="summary">Total remboursé : <span>$ {{ number_format($total, 2) }}</span></div>
+    <div class="summary">Total remboursé : <span>{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($total, 2) }}</span></div>
     <table>
         <thead>
-            <tr><th>#</th><th>Membre</th><th>Prêt #</th><th>Montant ($)</th><th>Date</th><th>Notes</th></tr>
+            <tr><th>#</th><th>Membre</th><th>Prêt #</th><th>Montant {{ \App\Models\Setting::get('currency', 'USD') }}</th><th>Date</th><th>Notes</th></tr>
         </thead>
         <tbody>
             @forelse($repayments as $i => $r)
@@ -36,7 +36,7 @@
                 <td>{{ $i + 1 }}</td>
                 <td>{{ $r->loan->member->full_name }}</td>
                 <td>#{{ $r->loan_id }}</td>
-                <td style="text-align:right; font-weight:bold; color:#0891b2">$ {{ number_format($r->amount, 2) }}</td>
+                <td style="text-align:right; font-weight:bold; color:#0891b2">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($r->amount, 2) }}</td>
 
                 <td>{{ \Carbon\Carbon::parse($r->payment_date)->format('d/m/Y') }}</td>
                 <td>{{ $r->notes ?? '—' }}</td>

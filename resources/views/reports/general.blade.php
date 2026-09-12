@@ -48,24 +48,24 @@
     <!-- 1. RÉSUMÉ EXÉCUTIF -->
     <div class="section-title">Résumé Exécutif de la Situation Financière</div>
     <div class="kpi-grid">
-        <div class="kpi-box"><div class="val success">$ {{ number_format($balance, 2) }}</div><div class="lbl">Solde Global</div></div>
-        <div class="kpi-box"><div class="val">$ {{ number_format($available, 2) }}</div><div class="lbl">Disponible</div></div>
-        <div class="kpi-box"><div class="val warning">$ {{ number_format($solidarity, 2) }}</div><div class="lbl">Solidarité</div></div>
-        <div class="kpi-box"><div class="val danger">$ {{ number_format($total_loaned, 2) }}</div><div class="lbl">Encours Prêts</div></div>
+        <div class="kpi-box"><div class="val success">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($balance, 2) }}</div><div class="lbl">Solde Global</div></div>
+        <div class="kpi-box"><div class="val">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($available, 2) }}</div><div class="lbl">Disponible</div></div>
+        <div class="kpi-box"><div class="val warning">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($solidarity, 2) }}</div><div class="lbl">Solidarité</div></div>
+        <div class="kpi-box"><div class="val danger">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($total_loaned, 2) }}</div><div class="lbl">Encours Prêts</div></div>
     </div>
     <div class="kpi-grid">
         <div class="kpi-box"><div class="val">{{ $total_members }}</div><div class="lbl">Membres</div></div>
-        <div class="kpi-box"><div class="val success">$ {{ number_format($total_contributions, 2) }}</div><div class="lbl">Total Cotisé</div></div>
+        <div class="kpi-box"><div class="val success">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($total_contributions, 2) }}</div><div class="lbl">Total Cotisé</div></div>
         <div class="kpi-box"><div class="val danger">{{ $late_contributions }}</div><div class="lbl">Retards</div></div>
     </div>
 
     <!-- 2. AUDIT DE CAISSE -->
     <div class="section-title">Analyse Détaillée de la Liquidité (Audit)</div>
     <table style="width: 60%;">
-        <tr><td>Solde Brut en Caisse</td><td class="text-right font-bold">$ {{ number_format($audit['gross_balance'], 2) }}</td></tr>
-        <tr><td>Moins : Prêts Actifs (Encours)</td><td class="text-right danger">- $ {{ number_format($audit['loans_encumbrance'], 2) }}</td></tr>
-        <tr class="bg-gray"><td class="font-bold">SOLDE DISPONIBLE RÉEL</td><td class="text-right font-bold success">$ {{ number_format($audit['available_raw'], 2) }}</td></tr>
-        <tr><td>Dont part réservée Solidarité</td><td class="text-right warning">$ {{ number_format($audit['solidarity'], 2) }}</td></tr>
+        <tr><td>Solde Brut en Caisse</td><td class="text-right font-bold">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($audit['gross_balance'], 2) }}</td></tr>
+        <tr><td>Moins : Prêts Actifs (Encours)</td><td class="text-right danger">- {{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($audit['loans_encumbrance'], 2) }}</td></tr>
+        <tr class="bg-gray"><td class="font-bold">SOLDE DISPONIBLE RÉEL</td><td class="text-right font-bold success">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($audit['available_raw'], 2) }}</td></tr>
+        <tr><td>Dont part réservée Solidarité</td><td class="text-right warning">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($audit['solidarity'], 2) }}</td></tr>
     </table>
 
     <div class="page-break"></div>
@@ -92,7 +92,7 @@
                 <td>{{ $m->joined_at->format('d/m/Y') }}</td>
                 <td>{{ $m->confidence_score }}%</td>
                 <td>{{ $m->contributions_count }}</td>
-                <td class="text-right">$ {{ number_format($m->contributions_sum_amount ?? 0, 2) }}</td>
+                <td class="text-right">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($m->contributions_sum_amount ?? 0, 2) }}</td>
                 <td><span class="{{ $m->status === 'active' ? 'success' : 'danger' }}">{{ ucfirst($m->status) }}</span></td>
             </tr>
             @endforeach
@@ -110,7 +110,7 @@
                 <th>Membre</th>
                 <th>N° Membre</th>
                 <th>N° Reçu</th>
-                <th class="text-right">Montant ($)</th>
+                <th class="text-right">Montant {{ \App\Models\Setting::get('currency', 'USD') }}</th>
                 <th>Statut</th>
             </tr>
         </thead>
@@ -121,7 +121,7 @@
                 <td>{{ $c->member->full_name }}</td>
                 <td>{{ $c->member->member_number }}</td>
                 <td>{{ $c->receipt_number ?? '—' }}</td>
-                <td class="text-right font-bold">$ {{ number_format($c->amount, 2) }}</td>
+                <td class="text-right font-bold">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($c->amount, 2) }}</td>
                 <td><span class="{{ $c->status === 'paid' ? 'success' : 'danger' }}">{{ $c->status }}</span></td>
             </tr>
             @empty
@@ -139,7 +139,7 @@
         <thead>
             <tr>
                 <th>Membre</th>
-                <th>Capital ($)</th>
+                <th>Capital {{ \App\Models\Setting::get('currency', 'USD') }}</th>
                 <th>Durée</th>
                 <th>Total dû</th>
                 <th>Restant</th>
@@ -150,10 +150,10 @@
             @forelse($loans as $loan)
             <tr>
                 <td>{{ $loan->member->full_name }}</td>
-                <td>$ {{ number_format($loan->principal_amount, 2) }}</td>
+                <td>{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($loan->principal_amount, 2) }}</td>
                 <td>{{ $loan->term_months }} mois</td>
-                <td class="font-bold">$ {{ number_format($loan->total_to_repay, 2) }}</td>
-                <td class="text-right danger">$ {{ number_format($loan->balance_remaining, 2) }}</td>
+                <td class="font-bold">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($loan->total_to_repay, 2) }}</td>
+                <td class="text-right danger">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($loan->balance_remaining, 2) }}</td>
                 <td>{{ $loan->status }}</td>
             </tr>
             @empty
@@ -169,7 +169,7 @@
                 <th>Date</th>
                 <th>Membre</th>
                 <th>Prêt #</th>
-                <th class="text-right">Montant ($)</th>
+                <th class="text-right">Montant {{ \App\Models\Setting::get('currency', 'USD') }}</th>
             </tr>
         </thead>
         <tbody>
@@ -178,7 +178,7 @@
                 <td>{{ \Carbon\Carbon::parse($r->payment_date)->format('d/m/Y') }}</td>
                 <td>{{ $r->loan->member->full_name }}</td>
                 <td>#{{ $r->loan_id }}</td>
-                <td class="text-right font-bold success">$ {{ number_format($r->amount_paid, 2) }}</td>
+                <td class="text-right font-bold success">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($r->amount_paid, 2) }}</td>
             </tr>
             @endforeach
         </tbody>
@@ -195,7 +195,7 @@
                 <th>Date</th>
                 <th>Membre</th>
                 <th>Motif</th>
-                <th class="text-right">Montant ($)</th>
+                <th class="text-right">Montant ({{ \App\Models\Setting::get('currency', 'USD') }})</th>
                 <th>Statut</th>
             </tr>
         </thead>
@@ -218,7 +218,7 @@
             <tr>
                 <th>Date</th>
                 <th>Description</th>
-                <th class="text-right">Montant ($)</th>
+                <th class="text-right">Montant ({{ \App\Models\Setting::get('currency', 'USD') }})</th>
             </tr>
         </thead>
         <tbody>

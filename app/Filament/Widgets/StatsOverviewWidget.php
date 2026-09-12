@@ -24,7 +24,7 @@ class StatsOverviewWidget extends BaseWidget
         $totalLoaned       = Loan::where('status', 'active')->sum('balance_remaining');
 
         return [
-            Stat::make('💰 Solde Global', '$ ' . number_format($globalBalance, 2))
+            Stat::make('💰 Solde Global', \App\Models\Setting::get('currency', 'USD') . ' ' . number_format($globalBalance, 2))
                 ->description('Balance actuelle de la caisse')
                 ->descriptionIcon('heroicon-o-building-library')
                 ->color('success'),
@@ -44,7 +44,7 @@ class StatsOverviewWidget extends BaseWidget
                 ->descriptionIcon('heroicon-o-exclamation-triangle')
                 ->color($lateContributions > 0 ? 'danger' : 'success'),
 
-            Stat::make('📊 Prêts en Cours', '$ ' . number_format($totalLoaned, 2))
+            Stat::make('📊 Prêts en Cours', \App\Models\Setting::get('currency', 'USD') . ' ' . number_format($totalLoaned, 2))
                 ->description('Total des encours')
                 ->descriptionIcon('heroicon-o-credit-card')
                 ->color('primary'),

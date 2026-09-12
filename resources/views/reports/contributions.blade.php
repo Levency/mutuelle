@@ -30,7 +30,7 @@
 </div>
 <div class="content">
     <div class="summary">
-        Total encaissé : <span>$ {{ number_format($total, 2) }}</span> &nbsp;|&nbsp;
+        Total encaissé : <span>{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($total, 2) }}</span> &nbsp;|&nbsp;
         Cotisations en retard : <span style="color:#dc2626">{{ $late_count }}</span>
     </div>
     <table>
@@ -40,7 +40,7 @@
                 <th>N° Reçu</th>
                 <th>Membre</th>
                 <th>N° Membre</th>
-                <th>Montant ($)</th>
+                <th>Montant {{ \App\Models\Setting::get('currency', 'USD') }}</th>
                 <th>Date</th>
                 <th>Statut</th>
             </tr>
@@ -52,7 +52,7 @@
                 <td>{{ $c->receipt_number ?? '—' }}</td>
                 <td>{{ $c->member->full_name }}</td>
                 <td>{{ $c->member->member_number }}</td>
-                <td style="text-align:right; font-weight:bold">$ {{ number_format($c->amount, 2) }}</td>
+                <td style="text-align:right; font-weight:bold">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($c->amount, 2) }}</td>
                 <td>{{ \Carbon\Carbon::parse($c->payment_date)->format('d/m/Y') }}</td>
                 <td>
                     @if($c->status === 'paid')

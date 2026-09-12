@@ -162,11 +162,11 @@ class LoanResource extends Resource
                     ->label('Membre')
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('principal_amount')->label('Capital')->money(\App\Models\Setting::get('currency', 'USD')),
+                Tables\Columns\TextColumn::make('principal_amount')->label('Capital')->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'USD')),
                 Tables\Columns\TextColumn::make('interest_rate')->label('Taux')->suffix('%'),
                 Tables\Columns\TextColumn::make('term_months')->label('Durée')->suffix(' mois'),
-                Tables\Columns\TextColumn::make('total_to_repay')->label('Total')->money(\App\Models\Setting::get('currency', 'USD')),
-                Tables\Columns\TextColumn::make('balance_remaining')->label('Restant')->money(\App\Models\Setting::get('currency', 'USD'))
+                Tables\Columns\TextColumn::make('total_to_repay')->label('Total')->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'USD')),
+                Tables\Columns\TextColumn::make('balance_remaining')->label('Restant')->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'USD'))
                     ->color(fn($state) => $state > 0 ? 'danger' : 'success'),
                 Tables\Columns\TextColumn::make('repayment_progress')
                     ->label('Progression')
@@ -310,11 +310,11 @@ class LoanResource extends Resource
             Infolists\Components\Section::make('Détails du Prêt')
                 ->schema([
                     Infolists\Components\TextEntry::make('member.full_name')->label('Membre'),
-                    Infolists\Components\TextEntry::make('principal_amount')->label('Capital')->money(\App\Models\Setting::get('currency', 'USD')),
+                    Infolists\Components\TextEntry::make('principal_amount')->label('Capital')->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'USD')),
                     Infolists\Components\TextEntry::make('interest_rate')->label('Taux d\'intérêt')->suffix('%'),
                     Infolists\Components\TextEntry::make('term_months')->label('Durée')->suffix(' mois'),
-                    Infolists\Components\TextEntry::make('total_to_repay')->label('Total à rembourser')->money(\App\Models\Setting::get('currency', 'USD')),
-                    Infolists\Components\TextEntry::make('balance_remaining')->label('Solde restant')->money(\App\Models\Setting::get('currency', 'USD')),
+                    Infolists\Components\TextEntry::make('total_to_repay')->label('Total à rembourser')->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'USD')),
+                    Infolists\Components\TextEntry::make('balance_remaining')->label('Solde restant')->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'USD')),
                     Infolists\Components\TextEntry::make('status')->label('Statut')->badge(),
                     Infolists\Components\TextEntry::make('disbursement_date')->label('Décaissement')->date('d/m/Y'),
                     Infolists\Components\TextEntry::make('due_date')->label('Échéance')->date('d/m/Y'),

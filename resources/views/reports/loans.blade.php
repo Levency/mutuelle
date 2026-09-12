@@ -31,8 +31,8 @@
 </div>
 <div class="content">
     <div class="summary">
-        Capital total : <span>$ {{ number_format($total_principal, 2) }}</span> &nbsp;|&nbsp;
-        Encours actifs : <span style="color:#dc2626">$ {{ number_format($total_remaining, 2) }}</span> &nbsp;|&nbsp;
+        Capital total : <span>{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($total_principal, 2) }}</span> &nbsp;|&nbsp;
+        Encours actifs : <span style="color:#dc2626">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($total_remaining, 2) }}</span> &nbsp;|&nbsp;
         En attente : <span style="color:#d97706">{{ $pending_count }}</span> &nbsp;|&nbsp;
         Actifs : <span style="color:#059669">{{ $active_count }}</span> &nbsp;|&nbsp;
         Remboursés : <span style="color:#6b7280">{{ $repaid_count }}</span>
@@ -42,11 +42,11 @@
             <tr>
                 <th>#</th>
                 <th>Membre</th>
-                <th>Capital ($)</th>
+                <th>Capital {{ \App\Models\Setting::get('currency', 'USD') }}</th>
                 <th>Taux %</th>
                 <th>Durée</th>
-                <th>Total dû ($)</th>
-                <th>Restant ($)</th>
+                <th>Total dû {{ \App\Models\Setting::get('currency', 'USD') }}</th>
+                <th>Restant {{ \App\Models\Setting::get('currency', 'USD') }}</th>
                 <th>Statut</th>
                 <th>Décaissement</th>
             </tr>
@@ -56,11 +56,11 @@
             <tr>
                 <td>{{ $i + 1 }}</td>
                 <td>{{ $loan->member->full_name }}</td>
-                <td style="text-align:right">$ {{ number_format($loan->principal_amount, 2) }}</td>
+                <td style="text-align:right">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($loan->principal_amount, 2) }}</td>
                 <td style="text-align:center">{{ $loan->interest_rate }}%</td>
                 <td style="text-align:center">{{ $loan->term_months }} mois</td>
-                <td style="text-align:right; font-weight:bold">$ {{ number_format($loan->total_to_repay, 2) }}</td>
-                <td style="text-align:right; color:{{ $loan->balance_remaining > 0 ? '#dc2626' : '#059669' }}">$ {{ number_format($loan->balance_remaining, 2) }}</td>
+                <td style="text-align:right; font-weight:bold">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($loan->total_to_repay, 2) }}</td>
+                <td style="text-align:right; color:{{ $loan->balance_remaining > 0 ? '#dc2626' : '#059669' }}">{{ \App\Models\Setting::get('currency', 'USD') }} {{ number_format($loan->balance_remaining, 2) }}</td>
                 <td>
                     @php $colors = ['pending'=>'warning','active'=>'success','repaid'=>'gray','defaulted'=>'danger','rejected'=>'danger'] @endphp
                     <span class="badge badge-{{ $colors[$loan->status] ?? 'gray' }}">

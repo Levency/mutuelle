@@ -141,7 +141,7 @@ class MemberResource extends Resource
 
                 Tables\Columns\TextColumn::make('total_contributed')
                     ->label('Total cotisé')
-                    ->money(\App\Models\Setting::get('currency', 'USD'))
+                    ->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'USD'))
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('confidence_score')

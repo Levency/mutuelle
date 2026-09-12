@@ -30,7 +30,7 @@ class SolidarityFundResource extends Resource
                         ->options(['inflow' => 'Entrée', 'outflow' => 'Sortie'])
                         ->required(),
                     Forms\Components\TextInput::make('amount')
-                        ->label('Montant ($)')
+                        ->label('Montant (' . \App\Models\Setting::get('currency', 'USD') . ')')
                         ->numeric()
                         ->required()
                         ->minValue(1),
@@ -57,12 +57,12 @@ class SolidarityFundResource extends Resource
                     ->formatStateUsing(fn($state) => $state === 'inflow' ? 'Entrée' : 'Sortie'),
                 Tables\Columns\TextColumn::make('amount')
                     ->label('Montant')
-                    ->money(\App\Models\Setting::get('currency', 'USD'))
+                    ->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'USD'))
                     ->sortable()
                     ->color(fn($record) => $record->type === 'inflow' ? 'success' : 'danger'),
                 Tables\Columns\TextColumn::make('balance_after')
                     ->label('Solde après')
-                    ->money(\App\Models\Setting::get('currency', 'USD')),
+                    ->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'USD')),
                 Tables\Columns\TextColumn::make('description')
                     ->label('Description')
                     ->limit(50)

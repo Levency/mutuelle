@@ -27,8 +27,8 @@ class SchedulesRelationManager extends RelationManager
     {
         return $table->columns([
             Tables\Columns\TextColumn::make('due_date')->label('Échéance')->date('d/m/Y')->sortable(),
-            Tables\Columns\TextColumn::make('amount_due')->label('Montant dû')->money(\App\Models\Setting::get('currency', 'USD')),
-            Tables\Columns\TextColumn::make('amount_paid')->label('Payé')->money(\App\Models\Setting::get('currency', 'USD')),
+            Tables\Columns\TextColumn::make('amount_due')->label('Montant dû')->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'USD')),
+            Tables\Columns\TextColumn::make('amount_paid')->label('Payé')->numeric(decimalPlaces: 2)->suffix(' ' . \App\Models\Setting::get('currency', 'USD')),
             Tables\Columns\TextColumn::make('status')->label('Statut')
                 ->badge()
                 ->color(fn($state) => match($state) {
