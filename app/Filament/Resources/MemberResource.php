@@ -175,6 +175,18 @@ class MemberResource extends Resource
                     ->label('Adhésion')
                     ->date('d/m/Y')
                     ->sortable(),
+
+                Tables\Columns\IconColumn::make('has_access_code')
+                    ->label('Portail')
+                    ->getStateUsing(fn(Member $record) => $record->hasAccessCode())
+                    ->boolean()
+                    ->trueIcon('heroicon-o-key')
+                    ->falseIcon('heroicon-o-lock-closed')
+                    ->trueColor('success')
+                    ->falseColor('gray')
+                    ->tooltip(fn(Member $record) => $record->hasAccessCode()
+                        ? "Code d'accès actif — dernière génération le " . $record->access_code_generated_at?->format('d/m/Y')
+                        : "Aucun code d'accès au portail membre"),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
@@ -203,6 +215,35 @@ class MemberResource extends Resource
                     ->action(function ($record) {
                         $record->update(['status' => 'active', 'confidence_score' => 100]);
                         Notification::make()->title('Membre réactivé')->success()->send();
+                    }),
+                Tables\Actions\Action::make('generateAccessCode')
+                    ->label(fn(Member $record) => $record->hasAccessCode() ? 'Régénérer le code' : "Créer un code d'accès")
+                    ->icon('heroicon-o-key')
+                    ->color('gray')
+                    ->requiresConfirmation()
+                    ->modalHeading("Générer un code d'accès au portail")
+                    ->modalDescription('Un nouveau code à 6 chiffres sera créé et remplacera immédiatement l\'ancien, le cas échéant. Il ne sera affiché qu\'une seule fois.')
+                    ->modalSubmitActionLabel('Générer')
+                    ->action(function (Member $record) {
+                        $code = $record->generateAccessCode();
+
+                        Notification::make()
+                            ->title("Code d'accès généré pour {$record->full_name}")
+                            ->body("Code : {$code}\n\nNotez-le et communiquez-le au membre immédiatement — il ne sera plus jamais affiché.")
+                            ->success()
+                            ->persistent()
+                            ->send();
+                    }),
+                Tables\Actions\Action::make('revokeAccessCode')
+                    ->label('Révoquer le code')
+                    ->icon('heroicon-o-lock-closed')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalDescription('Le membre ne pourra plus se connecter au portail tant qu\'un nouveau code ne lui sera pas généré.')
+                    ->visible(fn(Member $record) => $record->hasAccessCode())
+                    ->action(function (Member $record) {
+                        $record->revokeAccessCode();
+                        Notification::make()->title("Code d'accès révoqué")->warning()->send();
                     }),
             ])
             ->bulkActions([
@@ -266,6 +307,22 @@ class MemberResource extends Resource
                             ->schema([
                                 Infolists\Components\TextEntry::make('emergency_contact')->label('Nom du contact')->icon('heroicon-m-user-group'),
                                 Infolists\Components\TextEntry::make('emergency_phone')->label('Téléphone')->icon('heroicon-m-phone'),
+                            ]),
+                    ])->collapsible(),
+                Infolists\Components\Section::make('Portail Membre')
+                    ->description('Espace de consultation détaché de l\'administration — utilisez les actions "Créer/Régénérer le code" dans la liste des membres')
+                    ->icon('heroicon-o-key')
+                    ->schema([
+                        Infolists\Components\Grid::make(2)
+                            ->schema([
+                                Infolists\Components\TextEntry::make('has_access_code')
+                                    ->label('Code d\'accès')
+                                    ->state(fn(Member $record) => $record->hasAccessCode() ? 'Actif' : 'Aucun')
+                                    ->badge()
+                                    ->color(fn(Member $record) => $record->hasAccessCode() ? 'success' : 'gray'),
+                                Infolists\Components\TextEntry::make('access_code_generated_at')->label('Dernière génération')->dateTime('d/m/Y H:i')->placeholder('—'),
+                                Infolists\Components\TextEntry::make('portal_last_login_at')->label('Dernière connexion au portail')->dateTime('d/m/Y H:i')->placeholder('Jamais connecté'),
+                                Infolists\Components\TextEntry::make('portal_last_login_ip')->label('Dernière IP')->placeholder('—'),
                             ]),
                     ])->collapsible(),
             ]);

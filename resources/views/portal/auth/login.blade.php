@@ -6,7 +6,7 @@
     <div class="mx-auto max-w-sm">
         <div class="mb-8 text-center">
             <p class="font-display text-3xl text-ink">Carnet du Membre</p>
-            <p class="mt-2 text-sm text-ink-soft">{{ $orgName }}</p>
+            <p class="mt-2 text-sm text-ink-soft">{{ \App\Models\Setting::get('organization_name', 'Mutuelle') }}</p>
         </div>
 
         <div class="border border-rule bg-paper rounded-sm p-6">
