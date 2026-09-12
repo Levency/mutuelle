@@ -249,6 +249,29 @@ class MemberResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\BulkAction::make('generateAccessCodes')
+                        ->label('Générer codes d\'accès (CSV)')
+                        ->icon('heroicon-o-key')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->modalDescription('Génère un nouveau code d\'accès pour chaque membre sélectionné et télécharge la liste dans un fichier CSV. Attention : cela remplacera les codes existants.')
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records) {
+                            $csvData = "\xEF\xBB\xBF"; // UTF-8 BOM pour Excel
+                            $csvData .= "N° Membre;Nom Complet;Code d'accès\n";
+                            
+                            foreach ($records as $record) {
+                                $code = $record->generateAccessCode();
+                                $csvData .= "{$record->member_number};{$record->full_name};{$code}\n";
+                            }
+                            
+                            $filename = "codes_acces_mutuelle_" . date('Ymd_His') . ".csv";
+                            
+                            return response()->streamDownload(function () use ($csvData) {
+                                echo $csvData;
+                            }, $filename, [
+                                'Content-Type' => 'text/csv; charset=UTF-8',
+                            ]);
+                        }),
                 ]),
             ])
             ->defaultSort('joined_at', 'desc');
