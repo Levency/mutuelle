@@ -29,7 +29,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->profile()
+            ->profile(\App\Filament\Pages\Auth\EditProfile::class)
             ->colors([
                 'primary' => Color::Indigo,
                 'success' => Color::Emerald,
