@@ -45,4 +45,5 @@ Route::middleware(['auth'])->prefix('admin/reports')->name('reports.')->group(fu
     Route::get('/loans',         [ReportController::class, 'loans'])->name('loans');
     Route::get('/repayments',    [ReportController::class, 'repayments'])->name('repayments');
     Route::get('/help-requests', [ReportController::class, 'helpRequests'])->name('help_requests');
+    Route::get('/member/{member}', [ReportController::class, 'member'])->name('member');
 });

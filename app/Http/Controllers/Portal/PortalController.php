@@ -131,6 +131,13 @@ class PortalController extends Controller
     {
         // Rapport général : uniquement des agrégats de la mutuelle dans son
         // ensemble — aucune donnée nominative sur les autres membres.
+        $expenses = \App\Models\Fund::where('type', 'outflow')
+            ->orderByDesc('created_at')
+            ->get();
+            
+        $totalExpenses = $expenses->sum('amount');
+        $totalInflows = \App\Models\Fund::where('type', 'inflow')->sum('amount');
+        
         return view('portal.report', [
             'currency'           => Setting::get('currency', 'Gourdes'),
             'grossBalance'       => $fundService->getGrossBalance(),
@@ -141,6 +148,9 @@ class PortalController extends Controller
             'totalContributions' => Contribution::where('status', 'paid')->sum('amount'),
             'activeLoansCount'   => Loan::where('status', 'active')->count(),
             'pendingHelpCount'   => HelpRequest::where('status', 'pending')->count(),
+            'expenses'           => $expenses,
+            'totalExpenses'      => $totalExpenses,
+            'totalInflows'       => $totalInflows,
         ]);
     }
 }

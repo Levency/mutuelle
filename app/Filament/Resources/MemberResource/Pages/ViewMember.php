@@ -13,6 +13,12 @@ class ViewMember extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('fullReport')
+                ->label('Rapport complet (PDF)')
+                ->icon('heroicon-o-document-arrow-down')
+                ->color('gray')
+                ->url(fn () => route('reports.member', $this->record))
+                ->openUrlInNewTab(),
             Actions\Action::make('generateAccessCode')
                 ->label(fn() => $this->record->hasAccessCode() ? 'Régénérer le code d\'accès' : "Créer un code d'accès")
                 ->icon('heroicon-o-key')

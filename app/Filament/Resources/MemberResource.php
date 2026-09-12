@@ -356,6 +356,9 @@ class MemberResource extends Resource
         return [
             RelationManagers\ContributionsRelationManager::class,
             RelationManagers\LoansRelationManager::class,
+            RelationManagers\RepaymentsRelationManager::class,
+            RelationManagers\HelpRequestsRelationManager::class,
+            RelationManagers\SolidarityMovementsRelationManager::class,
         ];
     }
 

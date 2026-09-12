@@ -37,7 +37,10 @@ class ContributionsRelationManager extends RelationManager
                 ->formatStateUsing(fn($state) => match($state) {
                     'paid' => 'Payé', 'late' => 'En retard', 'pending' => 'En attente', default => $state,
                 }),
-        ])->headerActions([Tables\Actions\CreateAction::make()])
+        ])
+          ->defaultSort('payment_date', 'desc')
+          ->paginationPageOptions([10, 25, 50])
+          ->headerActions([Tables\Actions\CreateAction::make()])
           ->actions([
               Tables\Actions\Action::make('view')
                   ->label('Voir')

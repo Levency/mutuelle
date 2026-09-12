@@ -33,7 +33,10 @@ class LoansRelationManager extends RelationManager
                     'warning' => 'pending', 'success' => 'active',
                     'gray' => 'repaid', 'danger' => 'defaulted', 'info' => 'rejected',
                 ]),
-        ])->actions([
+        ])
+            ->defaultSort('created_at', 'desc')
+            ->paginationPageOptions([10, 25, 50])
+            ->actions([
             Tables\Actions\Action::make('view')
                 ->label('Voir le prêt')
                 ->icon('heroicon-s-eye')

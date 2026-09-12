@@ -124,6 +124,29 @@ class Member extends Authenticatable
         return $this->hasMany(HelpRequest::class);
     }
 
+    /**
+     * Tous les remboursements effectués sur les prêts de ce membre
+     * (à travers ses prêts — un membre n'a pas de FK directe vers loan_repayments).
+     */
+    public function loanRepayments(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
+    {
+        return $this->hasManyThrough(LoanRepayment::class, Loan::class);
+    }
+
+    /**
+     * Mouvements du fonds de solidarité générés par les cotisations de ce
+     * membre. Ce n'est pas une relation Eloquent classique (SolidarityFund
+     * référence une Contribution via une colonne polymorphe, pas le membre
+     * directement) : on retourne un Builder brut, que Filament sait exploiter
+     * comme n'importe quelle relation en lecture seule dans un RelationManager.
+     */
+    public function solidarityMovements(): \Illuminate\Database\Eloquent\Builder
+    {
+        return SolidarityFund::query()
+            ->where('reference_type', Contribution::class)
+            ->whereIn('reference_id', $this->contributions()->pluck('id'));
+    }
+
     public function loanPenalties(): HasMany
     {
         return $this->hasMany(LoanPenalty::class);
