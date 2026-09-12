@@ -275,6 +275,44 @@ class ReportController extends Controller
         return $this->returnPdf($pdf, 'rapport-aides', $request);
     }
 
+    // ── Rapport Complet d'un Membre (sans exception) ────────────────────────
+    public function member(Request $request, Member $member)
+    {
+        $contributions = $member->contributions()->orderByDesc('payment_date')->get();
+        $loans         = $member->loans()->with('schedules')->orderByDesc('created_at')->get();
+        $repayments    = $member->loanRepayments()->orderByDesc('payment_date')->get();
+        $helpRequests  = $member->helpRequests()->orderByDesc('created_at')->get();
+        $solidarity    = $member->solidarityMovements()->orderByDesc('created_at')->get();
+        $contribPenalties = $member->contributionPenalties()->orderByDesc('created_at')->get();
+        $loanPenalties    = $member->loanPenalties()->orderByDesc('created_at')->get();
+
+        $pdf = Pdf::loadView('reports.member', [
+            'title'    => "Rapport Complet — {$member->full_name}",
+            'date'     => now()->format('d/m/Y H:i'),
+            'currency' => Setting::get('currency', 'Gourdes'),
+            'member'   => $member,
+
+            'contributions'      => $contributions,
+            'totalContributions' => $contributions->where('status', 'paid')->sum('amount'),
+
+            'loans' => $loans,
+
+            'repayments'      => $repayments,
+            'totalRepayments' => $repayments->sum('amount_paid'),
+
+            'helpRequests'  => $helpRequests,
+            'totalHelpPaid' => $helpRequests->where('status', 'paid')->sum('amount_requested'),
+
+            'solidarity'      => $solidarity,
+            'totalSolidarity' => $solidarity->where('type', 'inflow')->sum('amount'),
+
+            'contribPenalties' => $contribPenalties,
+            'loanPenalties'    => $loanPenalties,
+        ])->setPaper('A4', 'portrait');
+
+        return $this->returnPdf($pdf, "rapport-membre-{$member->member_number}", $request);
+    }
+
     private function returnPdf($pdf, string $name, Request $request)
     {
         $filename = "{$name}-" . now()->format('Y-m-d') . '.pdf';
