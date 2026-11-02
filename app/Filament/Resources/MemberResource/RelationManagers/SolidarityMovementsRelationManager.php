@@ -8,9 +8,7 @@ use Filament\Tables\Table;
 
 /**
  * Liste en lecture seule des mouvements de solidarité générés par les
- * cotisations de ce membre. Adossée à Member::solidarityMovements(), qui
- * retourne un simple Builder (pas une relation Eloquent classique) —
- * Filament l'exploite normalement pour l'affichage et la pagination.
+ * cotisations de ce membre, via la relation Member::solidarityMovements().
  */
 class SolidarityMovementsRelationManager extends RelationManager
 {
