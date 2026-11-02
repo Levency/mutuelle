@@ -1,0 +1,9 @@
+# L'hébergement (Hostinger) sert la racine du projet au lieu de public/.
+# On redirige toutes les requêtes vers public/ : Laravel reçoit les routes
+# (/admin, /connexion...) et les fichiers du projet (composer.json, artisan,
+# vendor/, .env...) ne sont plus accessibles depuis le web.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
